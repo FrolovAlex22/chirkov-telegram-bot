@@ -17,7 +17,17 @@ async def start_cmd(message: Message):
     await message.answer(text, reply_markup=MAIN_MENU)
 
 
+@other_router.callback_query(F.data == "main_menu", StateFilter("*"))
+async def start_cmd(callback: CallbackQuery, state: FSMContext | None):
+    """Сообщение в возврата в главное меню"""
+    await callback.answer()
+    await callback.message.answer(
+        LEXICON_OTHER["main_menu"],
+        reply_markup=MAIN_MENU
+    )
+
+
 @other_router.message()
-async def echo(message: Message):
+async def reply_to_correspondence(message: Message):
     """Сообщение в случае попытки переписки со стороны пользователя"""
     await message.answer(LEXICON_OTHER["other_answer"], reply_markup=MAIN_MENU)
