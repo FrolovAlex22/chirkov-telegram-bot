@@ -1,3 +1,6 @@
+from aiogram.utils.formatting import Bold, as_marked_section
+
+
 LEXICON_OTHER = {
     "main_menu": "Вы в главном меню, выберите действие",
     "other_answer": "Этот бот не для переписки, нужно выбрать действие",
@@ -9,6 +12,46 @@ LEXICON_CERAMICS = {
     "ceramics_event": "Тут будет пагинация предстоящих мероприятий",
     "ceramics_works_of_masters": "Выберите мастера, для просмотра их работ",
     "ceramics_lesson": "Ниже тарифы на посещение уроков керамики",
+
+    "admin_master_and_works": as_marked_section(
+            Bold("Управление списком мастеров, и их работ:\n"),
+            "Добавить/удалить мастера.",
+            "Добавить/удалить изделие.",
+            marker="✅ ",
+        ).as_html(),
+    "admin_master": "Управление мастерами 4 стихии",
+    "admin_master_add": "Чтобы зарегистрировать мастера, Введите имя и фамилию",
+    "admin_master_add_complete": "Мастер зарегестрирован\n\n",
+    "admin_master_add_error": "Нужно отправить имя и фамилию текстом",
+    "admin_master_list": "Список зарегестрированных мастеров ⏫",
+    "admin_master_after_delete": "Мастер удален из базы данных.",
+
+    "admin_works": "Управление работами мастеров керамики",
+    "admin_works_add": "Введите название нового изделия",
+    "admin_works_add_description": "Введите описание изделия",
+    "admin_works_add_price": "Введите цену изделия",
+    "admin_works_add_master": "Теперь выберите мастера из списка",
+    "admin_works_add_complete": "Изделие добавлено\n\n",
+    "admin_works_add_error": "Нужно отправить характеристики изделия текстом",
+    "admin_works_add_error_price": "Нужно отправить числовое значение цены",
+    "admin_works_list_choise": "Выберите мастера из списка",
+    "admin_works_list": "Список изделий ⏫",
+    "admin_works_delete_warning": "Вы уверены, что хотите удалить изделие:",
+    "admin_works_after_delete": "Изделие удалено из базы данных.",
+
+    "admin_service_choise": as_marked_section(
+            Bold("Управление предоставляемыми услугами:\n"),
+            "Добавить новый вид услуги.",
+            "Изменить условия существующей.",
+            "Удалить услугу",
+            marker="✅ ",
+        ).as_html(),
+    "admin_service_add": "Введите название новой услуги",
+    "admin_service_add_complete": "Услуга добавлена\n\n",
+    "admin_service_add_error": "Нужно отправить название услуги текстом",
+    "admin_service_add_error_price": "Нужно отправить цену числом",
+    "admin_service_list": "Список предоставляемых услуг ⏫",
+    "admin_service_after_delete": "Услуга удалена из базы данных.",
 }
 
 
