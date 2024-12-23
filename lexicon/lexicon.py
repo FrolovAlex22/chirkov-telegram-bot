@@ -2,13 +2,14 @@ from aiogram.utils.formatting import Bold, as_marked_section
 
 
 LEXICON_OTHER = {
-    "main_menu": "Вы в главном меню, выберите действие",
+    # "main_menu": "Вы в главном меню, выберите действие",
     "other_answer": "Этот бот не для переписки, нужно выбрать действие",
+    "need_banner": "<b>Необходимо добавить баннер</b>",
 }
 
 
 LEXICON_CERAMICS = {
-    "ceramics_menu": "Вы в разделе керамики, выберите действие",
+    # "ceramics_menu": "Вы в разделе керамики, выберите действие",
     "ceramics_event": "Тут будет пагинация предстоящих мероприятий",
     "ceramics_works_of_masters": "Выберите мастера, для просмотра их работ",
     "ceramics_lesson": "Ниже тарифы на посещение уроков керамики",

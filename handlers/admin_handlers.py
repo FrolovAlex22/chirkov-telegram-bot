@@ -1,15 +1,30 @@
 from aiogram import F, Router
-from aiogram.filters import StateFilter, CommandStart, Command, or_f
+from aiogram.filters import StateFilter, Command, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import session_maker
-from database.methods import orm_add_ceramic_master, orm_add_ceramic_service, orm_add_ceramic_work, orm_change_banner_image, orm_delete_ceramic_master, orm_delete_ceramic_service, orm_delete_ceramic_work, orm_get_banner, orm_get_ceramic_master, orm_get_ceramic_masters, orm_get_ceramic_service, orm_get_ceramic_services, orm_get_ceramic_work, orm_get_ceramic_works_by_master, orm_get_info_pages
-from keyboards.admin_kb import ADMIN_CERAMIC, ADMIN_CERAMIC_MASTERS, ADMIN_CERAMIC_MASTERS_AFTER_ADD, ADMIN_CERAMIC_MASTERS_CHOISE, ADMIN_CERAMIC_MASTERS_LIST, ADMIN_CERAMIC_SERVICES, ADMIN_CERAMIC_SERVICES_AFTER_ADD, ADMIN_CERAMIC_SERVICES_CANCEL, ADMIN_CERAMIC_WORKS, ADMIN_CERAMIC_WORKS_AFTER_DELETE, ADMIN_EVENT, ADMIN_GALERY, ADMIN_KB, ADMIN_VR, BACK_TO_ADMIN_MENU, SELECTION_AFTER_ADDING_BANNER, get_ceramic_masters_btns, get_ceramic_works_btns
-from keyboards.inline import EVENT_KB, VR_INFO, VR_MENU, get_callback_btns
-from lexicon.lexicon import LEXICON_ADMIN, LEXICON_CERAMICS, LEXICON_EVENT, LEXICON_OTHER
+from database.methods import (
+    orm_add_ceramic_master, orm_add_ceramic_service, orm_add_ceramic_work,
+    orm_change_banner_image, orm_delete_ceramic_master,
+    orm_delete_ceramic_service, orm_delete_ceramic_work, orm_get_banner,
+    orm_get_ceramic_master, orm_get_ceramic_masters, orm_get_ceramic_service,
+    orm_get_ceramic_services, orm_get_ceramic_work,
+    orm_get_ceramic_works_by_master, orm_get_info_pages
+)
+from keyboards.admin_kb import (
+    ADMIN_CERAMIC, ADMIN_CERAMIC_MASTERS, ADMIN_CERAMIC_MASTERS_AFTER_ADD,
+    ADMIN_CERAMIC_MASTERS_CHOISE, ADMIN_CERAMIC_MASTERS_LIST,
+    ADMIN_CERAMIC_SERVICES, ADMIN_CERAMIC_SERVICES_AFTER_ADD,
+    ADMIN_CERAMIC_SERVICES_CANCEL, ADMIN_CERAMIC_WORKS,
+    ADMIN_CERAMIC_WORKS_AFTER_DELETE, ADMIN_EVENT, ADMIN_GALERY, ADMIN_KB,
+    ADMIN_VR, BACK_TO_ADMIN_MENU, SELECTION_AFTER_ADDING_BANNER,
+    get_ceramic_masters_btns, get_ceramic_works_btns
+)
+from keyboards.inline import get_callback_btns
+from lexicon.lexicon import LEXICON_ADMIN, LEXICON_CERAMICS, LEXICON_OTHER
 from middlewares.db import DataBaseSession
 
 
@@ -33,7 +48,7 @@ async def start_admin(
     banner = await orm_get_banner(session, page="admin")
     if not banner.image:
         await message.answer(
-            "<b>Необходимо добавить баннер</b>", reply_markup=ADMIN_KB
+            LEXICON_OTHER["need_banner"], reply_markup=ADMIN_KB
         )
     await message.answer_photo(
         banner.image, caption=banner.description, reply_markup=ADMIN_KB
@@ -51,7 +66,7 @@ async def start_admin_callback(
     banner = await orm_get_banner(session, page="admin")
     if not banner.image:
         await callback.message.answer(
-            "<b>Необходимо добавить баннер</b>", reply_markup=ADMIN_KB
+            LEXICON_OTHER["need_banner"], reply_markup=ADMIN_KB
         )
     await callback.message.answer_photo(
         banner.image, caption=banner.description, reply_markup=ADMIN_KB
@@ -156,7 +171,7 @@ async def admin_ceramic(
         banner = await orm_get_banner(session, page="admin")
         if not banner.image:
             await callback.message.answer(
-                "<b>Необходимо добавить баннер</b>", reply_markup=ADMIN_KB
+                LEXICON_OTHER["need_banner"], reply_markup=ADMIN_KB
             )
         await callback.message.answer_photo(
             banner.image,
@@ -463,7 +478,7 @@ async def admin_ceramic_works_delete_warning(
         text,
         reply_markup=get_callback_btns(
             btns={
-                "Удалить": f"delete_work_{work_id}"
+                "Удалить": f"delete_work_{work_id}",
                 "Отменить и вернуться в раздел керамики": "admin_ceramic"
             }
         )

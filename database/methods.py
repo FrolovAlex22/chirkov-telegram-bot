@@ -130,6 +130,13 @@ async def orm_get_ceramic_work(session: AsyncSession, work_id: int):
     return result.scalar()
 
 
+async def orm_get_ceramic_works(session: AsyncSession):
+    query = select(CeramicWork)
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
+
 async def orm_delete_ceramic_work(session: AsyncSession, work_id: int):
     query = delete(CeramicWork).where(CeramicWork.id == work_id)
     await session.execute(query)
