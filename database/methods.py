@@ -1,7 +1,7 @@
 from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import Banner, CeramicMaster, CeramicService, CeramicWork
+from database.models import Author, Banner, Category, CeramicMaster, CeramicService, CeramicWork
 
 
 # Работа с баннерами (информационными страницами)
@@ -35,6 +35,49 @@ async def orm_get_info_pages(session: AsyncSession):
     query = select(Banner)
     result = await session.execute(query)
     return result.scalars().all()
+
+
+############################ Категории ######################################
+
+async def orm_get_categories(session: AsyncSession):
+    query = select(Category)
+    result = await session.execute(query)
+    return result.scalars().all()
+
+async def orm_create_categories(session: AsyncSession, categories: list):
+    query = select(Category)
+    result = await session.execute(query)
+    if result.first():
+        return
+    session.add_all([Category(name=name) for name in categories])
+    await session.commit()
+
+
+############################ Авторы ######################################
+
+async def orm_create_author(session: AsyncSession, author_info: dict):
+    obj = Author(**author_info,
+    )
+    session.add(obj)
+    await session.commit()
+
+
+async def orm_get_authors_by_category(session: AsyncSession, category: int):
+    query = select(Author).where(Category.id == category)
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
+async def orm_get_ceramic_master(session: AsyncSession, author_id: int):
+    query = select(Author).where(Author.id == author_id)
+    result = await session.execute(query)
+    return result.scalar()
+
+
+async def orm_delete_ceramic_master(session: AsyncSession, author_id: int):
+    query = delete(Author).where(Author.id == author_id)
+    await session.execute(query)
+    await session.commit()
 
 
 # Раздел керамики: Мастера

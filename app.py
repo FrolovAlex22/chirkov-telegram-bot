@@ -27,7 +27,7 @@ dp = Dispatcher()
 async def on_startup(bot):
 
     # run_param = True
-    run_param = False
+    run_param = True
     if run_param:
         await drop_db()
 

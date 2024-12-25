@@ -1,7 +1,10 @@
 from aiogram.utils.formatting import Bold, as_marked_section
 
 CATEGORIES = [
-    'ceratin_botox', 'cold_recovery', "home_care"
+    "Арт галерея",
+    "Мастерская керамики",
+    "Виртуальная реальность",
+    "Мероприятия"
 ]
 
 DESCRIPTION_FOR_INFO_PAGES = {
