@@ -17,7 +17,7 @@ def get_callback_btns(
 
     return keyboard.adjust(*sizes).as_markup()
 
-# -----------------------------------------------------------------------------
+# ----------------------ОТСЕЧКА-------------------------------------
 class MenuCallBack(CallbackData, prefix="menu"):
     # level: int
     menu_name: str

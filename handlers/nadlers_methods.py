@@ -1,52 +1,52 @@
 from aiogram.types import InputMediaPhoto
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.methods import orm_get_banner, orm_get_ceramic_work, orm_get_ceramic_works
+from database.methods import orm_get_banner
 from keyboards.inline import get_products_btns, get_user_art_galery_btns, get_user_ceramic_btns, get_user_events_btns, get_user_main_btns, get_user_vr_btns
 from utils.paginator import Paginator
 
 
-def pages(paginator: Paginator):
-    """Кнопки для пагинации"""
-    btns = dict()
-    if paginator.has_previous():
-        btns["◀ Пред."] = "previous"
+# def pages(paginator: Paginator):
+#     """Кнопки для пагинации"""
+#     btns = dict()
+#     if paginator.has_previous():
+#         btns["◀ Пред."] = "previous"
 
-    if paginator.has_next():
-        btns["След. ▶"] = "next"
+#     if paginator.has_next():
+#         btns["След. ▶"] = "next"
 
-    return btns
-
-
-async def products(session, page):
-    """Получение списка работ из керамики"""
-    works = await orm_get_ceramic_works(session=session)
-
-    paginator = Paginator(works, page=page)
-    work = paginator.get_page()[0]
-
-    # image = InputMediaPhoto(
-    #     media=product.photo,
-    #     caption=f"<strong>{product.title}"
-    #             f"</strong>\n{product.description}\n"
-    #             f"Стоимость: {round(product.price, 2)}\n"
-    #             f"<strong>Товар {paginator.page}"
-    #             f" из {paginator.pages}</strong>",
-    # )
-    text = f"{work.title}"
+#     return btns
 
 
-    pagination_btns = pages(paginator)
+# async def products(session, page):
+#     """Получение списка работ из керамики"""
+#     works = await orm_get_ceramic_works(session=session)
 
-    kbds = get_products_btns(
-        # level=level,
-        # category=category,
-        page=page,
-        pagination_btns=pagination_btns,
-        # product_id=work.id,
-    )
+#     paginator = Paginator(works, page=page)
+#     work = paginator.get_page()[0]
 
-    return text, kbds
+#     # image = InputMediaPhoto(
+#     #     media=product.photo,
+#     #     caption=f"<strong>{product.title}"
+#     #             f"</strong>\n{product.description}\n"
+#     #             f"Стоимость: {round(product.price, 2)}\n"
+#     #             f"<strong>Товар {paginator.page}"
+#     #             f" из {paginator.pages}</strong>",
+#     # )
+#     text = f"{work.title}"
+
+
+#     pagination_btns = pages(paginator)
+
+#     kbds = get_products_btns(
+#         # level=level,
+#         # category=category,
+#         page=page,
+#         pagination_btns=pagination_btns,
+#         # product_id=work.id,
+#     )
+
+#     return text, kbds
 
 # ------------------------------------------------------------------------------
 async def main_menu(session, menu_name):

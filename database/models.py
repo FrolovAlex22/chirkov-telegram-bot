@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum as PyEnum
 
 from sqlalchemy import BigInteger, ForeignKey, String, Text, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class StatusProduct(PyEnum):
@@ -32,6 +32,7 @@ class Category(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(150), nullable=False)
+    event: Mapped["Event"] = relationship(backref="category_events")
 
 
 class Author(Base):
@@ -39,10 +40,31 @@ class Author(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(30), nullable=False)
+    telegram_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
     category: Mapped[int] = mapped_column(
         ForeignKey("category.id"), nullable=False
     )
-    telegram_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    event: Mapped[list["Event"]] = relationship(backref="author_events")
+
+
+class Event(Base):
+    __tablename__ = "event"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(150), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    image: Mapped[str] = mapped_column(String(150), nullable=True)
+    date: Mapped[datetime] = mapped_column(nullable=True)
+    category: Mapped[int] = mapped_column(
+        ForeignKey("category.id"), nullable=False
+    )
+    author: Mapped[int] = mapped_column(
+        ForeignKey("author.id"), nullable=False
+    )
+    authors: Mapped["Author"] = relationship(backref="authors")
+    categorys: Mapped["Category"] = relationship(
+        backref="categorys"
+    )
 
 
 class Product(Base):
@@ -67,22 +89,6 @@ class Product(Base):
         default=StatusProduct.PRODUCT,
         server_default="PRODUCT",
         nullable=False,
-    )
-
-
-class Event(Base):
-    __tablename__ = "event"
-
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    title: Mapped[str] = mapped_column(String(150), nullable=False)
-    description: Mapped[str] = mapped_column(Text, nullable=False)
-    image: Mapped[str] = mapped_column(String(150), nullable=True)
-    date: Mapped[datetime] = mapped_column(nullable=True)
-    category: Mapped[int] = mapped_column(
-        ForeignKey("category.id"), nullable=False
-    )
-    author: Mapped[int] = mapped_column(
-        ForeignKey("author.id"), nullable=False
     )
 
 

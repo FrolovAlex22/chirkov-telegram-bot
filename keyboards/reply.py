@@ -23,3 +23,12 @@ def get_keyboard(
 
     return keyboard.adjust(*sizes).as_markup(
             resize_keyboard=True, input_field_placeholder=placeholder)
+
+
+ADMIN_CHOISE_CATEGORY = get_keyboard(
+    "Арт галерея",
+    "Мастерская керамики",
+    "Виртуальная реальность",
+    "Мероприятия",
+    sizes=(1,)
+)

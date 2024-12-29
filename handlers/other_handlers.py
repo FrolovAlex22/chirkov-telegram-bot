@@ -43,7 +43,11 @@ async def start_cmd(message: Message, session: AsyncSession):
 
 
 @other_router.callback_query(MenuCallBack.filter())
-async def user_menu(callback: CallbackQuery, callback_data: MenuCallBack, session: AsyncSession):
+async def user_menu(
+    callback: CallbackQuery,
+    callback_data: MenuCallBack,
+    session: AsyncSession
+):
 
 
     media, reply_markup = await get_menu_content(
