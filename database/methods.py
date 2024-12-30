@@ -3,7 +3,7 @@ from sqlalchemy import select, delete, update
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import Author, Banner, Category, CeramicMaster, CeramicService, CeramicWork, Event
+from database.models import Author, Banner, Category, CeramicMaster, CeramicService, CeramicWork, Event, Product
 
 
 ############### Работа с баннерами (информационными страницами)################
@@ -114,6 +114,56 @@ async def orm_create_event(session: AsyncSession, event_info: dict):
         date=date,
         category=int(event_info["category"]),
         author=int(event_info["author"]),
+    )
+    session.add(obj)
+    await session.commit()
+
+
+async def orm_get_events(session: AsyncSession): # TODO
+    query = select(Event)
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
+async def orm_get_events_by_category(session: AsyncSession, category: int):
+    query = select(Event).where(Event.category == category)
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
+async def orm_get_event_by_title(session: AsyncSession, title: str): # TODO
+    query = select(Event).where(Event.title == title)
+    result = await session.execute(query)
+    return result.scalar()
+
+
+async def orm_get_event_by_id(session: AsyncSession, id: int):
+    query = (
+        select(Event).where(Event.id == id)
+        .options(joinedload(Event.authors))
+        .options(joinedload(Event.categorys))
+    )
+    result = await session.execute(query)
+    return result.unique().scalar()
+
+
+async def orm_delete_event(session: AsyncSession, id: int):
+    query = delete(Event).where(Event.id == id)
+    await session.execute(query)
+    await session.commit()
+
+
+############################ Продукты ######################################
+
+async def orm_create_product(session: AsyncSession, product_info: dict):
+    obj = Product(
+        name=product_info["name"],
+        description=product_info["description"],
+        price=int(product_info["price"]),
+        image=product_info["image"],
+        category=int(product_info["category"]),
+        author=int(product_info["author"]),
+        status=(product_info["status"]).upper(),
     )
     session.add(obj)
     await session.commit()

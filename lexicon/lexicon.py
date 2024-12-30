@@ -120,6 +120,24 @@ LEXICON_ADMIN = {
     "events_list": "<b>Выше списк мероприятий</b> ⏫",
     "event_deleted": "Мероприятие удалено из базы данных.",
 
+    "admin_product_choise": as_marked_section(
+            Bold("Управление товарами Чирковъ:\n"),
+            "Добавить новый продукт.",
+            "Управление списком продуктов.",
+            marker="✅ ",
+        ).as_html(),
+    "set_product_name": "Добавление нового продукта\n\n<b>Введите название</b>",
+    "set_product_description": "<b>Теперь введите описание продукта</b>",
+    "set_product_price": "Укажите цену.\n<b>Цена должна быть целым числом!</b>",
+    "set_product_image": "<b>Добавте фоторграфию</b>",
+    "set_product_category": "<b>Выберите категорию из списка</b>",
+    "photo_error_need_text": "<b>Цена должна состоять из целых чисел</b>",
+    "set_product_category": "<b>Выберите категорию из списка</b>",
+    "set_product_author": "<b>Выберите автора</b>",
+    "set_product_status": "<b>Выберите статус продукта</b>",
+    # "product_added": "<b>Продукт успешно добавлен</b>",
+    # "products_list": "<b>Выше списк продуктов</b> ⏫",
+    # "product_deleted": "Продукт удален из базы данных.",
 }
 
 

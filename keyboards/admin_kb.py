@@ -17,21 +17,10 @@ ADMIN_KB = get_callback_btns(
         "Добавить/Изменить баннер": "add_banner",
         "Управление авторами": "admin_author",
         "Мероприятия Чирковъ": "admin_event",
+        "Добавить / Удалить продукт": "admin_product",
     },
     sizes=(1, ),
 )
-
-
-# ADMIN_KB = get_callback_btns(
-#     btns={
-#         "Добавить/Изменить баннер": "add_banner",
-#         "Мероприятия Чирковъ": "admin_events",
-#         "Администрирование худоожественной галереи": "admin_galery",
-#         "Раздел 'Керамика'": "admin_ceramic",
-#         "Раздел 'VR'": "admin_vr",
-#     },
-#     sizes=(1, ),
-# )
 
 
 ###################################### БАНЕРЫ ##################################
@@ -73,6 +62,7 @@ ADMIN_MENU_SELECTION_EVENT = get_callback_btns(
 
 def get_categoryes_list(
     categoryes_list: list[Category],
+    return_cb: str,
     sizes: tuple[int] = (1, ),
 ) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
@@ -84,13 +74,14 @@ def get_categoryes_list(
         )
     )
     keyboard.add(InlineKeyboardButton(
-        text='В меню раздела мероприятия', callback_data='admin_event')
+        text="В меню раздела мероприятия", callback_data=return_cb)
     )
     return keyboard.adjust(*sizes).as_markup()
 
 
 def get_authors_list(
     authors_list: list[Author],
+    return_cb: str,
     sizes: tuple[int] = (1, ),
 ) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
@@ -102,7 +93,70 @@ def get_authors_list(
         )
     )
     keyboard.add(InlineKeyboardButton(
-        text='В меню раздела мероприятия', callback_data='admin_event')
+        text="В меню раздела мероприятия", callback_data=return_cb)
+    )
+    return keyboard.adjust(*sizes).as_markup()
+
+
+################################### ПРОДУКТЫ #################################
+
+
+ADMIN_MENU_SELECTION_PRODUCT = get_callback_btns(
+    btns={
+        "Добавить товар": "add_product",
+        "Список товаров": "admin_product_list",
+        "Вернуться в меню  администратора": "back_admin_menu",
+    },
+    sizes=(2,),
+)
+
+
+ADMIN_MENU_SELECTION_STATUS = get_callback_btns(
+    btns={
+        "продукт": "status_product",
+        "сервис": "status_service",
+        "Вернуться в меню  продуктов": "admin_product",
+    },
+    sizes=(2,),
+)
+
+
+
+
+def get_categoryes_list_by_product(
+    categoryes_list: list[Category],
+    return_cb: str,
+    sizes: tuple[int] = (1, ),
+) -> InlineKeyboardBuilder:
+    keyboard = InlineKeyboardBuilder()
+
+    for category in categoryes_list:
+        keyboard.add(InlineKeyboardButton(
+            text=category.name,
+            callback_data=f"product_choise_category_{category.id}"
+        )
+    )
+    keyboard.add(InlineKeyboardButton(
+        text="В меню раздела мероприятия", callback_data=return_cb)
+    )
+    return keyboard.adjust(*sizes).as_markup()
+
+
+def get_authors_list_by_product(
+    authors_list: list[Author],
+    return_cb: str,
+    sizes: tuple[int] = (1, ),
+) -> InlineKeyboardBuilder:
+    keyboard = InlineKeyboardBuilder()
+
+    for author in authors_list:
+        keyboard.add(InlineKeyboardButton(
+            text=author.name,
+            callback_data=f"product_choise_author_{author.id}"
+        )
+    )
+    keyboard.add(InlineKeyboardButton(
+        text="В меню раздела мероприятия", callback_data=return_cb)
     )
     return keyboard.adjust(*sizes).as_markup()
 

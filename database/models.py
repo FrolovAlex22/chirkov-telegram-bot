@@ -32,7 +32,6 @@ class Category(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(150), nullable=False)
-    event: Mapped["Event"] = relationship(backref="category_events")
 
 
 class Author(Base):
@@ -44,7 +43,6 @@ class Author(Base):
     category: Mapped[int] = mapped_column(
         ForeignKey("category.id"), nullable=False
     )
-    event: Mapped[list["Event"]] = relationship(backref="author_events")
 
 
 class Event(Base):
@@ -73,22 +71,22 @@ class Product(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(150), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    price: Mapped[int] = mapped_column(nullable=True)
+    image: Mapped[str] = mapped_column(String(150), nullable=True)
     category: Mapped[int] = mapped_column(
         ForeignKey("category.id"), nullable=False
     )
-    image: Mapped[str] = mapped_column(String(150), nullable=True)
-    price: Mapped[int] = mapped_column(nullable=True)
     author: Mapped[int] = mapped_column(
         ForeignKey("author.id"), nullable=False
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        index=True,
-        server_default=func.now()
     )
     status: Mapped[StatusProduct] = mapped_column(
         default=StatusProduct.PRODUCT,
         server_default="PRODUCT",
         nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        index=True,
+        server_default=func.now()
     )
 
 

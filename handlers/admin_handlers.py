@@ -8,11 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import session_maker
 from database.methods import (
-    orm_change_banner_image, orm_create_author, orm_create_event, orm_delete_author, orm_delete_event, orm_get_authors, orm_get_authors_by_id, orm_get_authors_by_name, orm_get_banner, orm_get_categories, orm_get_category_by_name, orm_get_event_by_id, orm_get_events, orm_get_events_by_category, orm_get_info_pages
+    orm_change_banner_image, orm_create_author, orm_create_event, orm_create_product, orm_delete_author, orm_delete_event, orm_get_authors, orm_get_authors_by_id, orm_get_authors_by_name, orm_get_banner, orm_get_categories, orm_get_category_by_name, orm_get_event_by_id, orm_get_events, orm_get_events_by_category, orm_get_info_pages
 )
 from keyboards.admin_kb import (
-ADMIN_KB, ADMIN_MENU_SELECTION_AUTHOR, ADMIN_MENU_SELECTION_EVENT,
-    BACK_TO_ADMIN_MENU, SELECTION_AFTER_ADDING_BANNER, get_authors_list, get_categoryes_list,
+ADMIN_KB, ADMIN_MENU_SELECTION_AUTHOR, ADMIN_MENU_SELECTION_EVENT, ADMIN_MENU_SELECTION_PRODUCT, ADMIN_MENU_SELECTION_STATUS,
+    BACK_TO_ADMIN_MENU, SELECTION_AFTER_ADDING_BANNER, get_authors_list, get_authors_list_by_product, get_categoryes_list, get_categoryes_list_by_product,
 
 )
 from keyboards.inline import get_callback_btns
@@ -329,9 +329,12 @@ class AddEvent(StatesGroup):
 @admin_router.callback_query(F.data == "admin_event")
 async def admin_author_menu(
     callback: CallbackQuery,
-    session: AsyncSession
+    session: AsyncSession,
+    state: FSMContext
 ):
     """Главное меню раздела Мероприятия"""
+    if await state.get_state():
+        await state.clear()
     if callback.message.photo:
         await callback.message.edit_caption(
             caption=LEXICON_ADMIN["admin_event_choise"],
@@ -551,7 +554,7 @@ async def admin_add_events_callback(
             categoryes = await orm_get_categories(session)
             await callback.message.answer(
                 text=LEXICON_ADMIN["set_event_category"],
-                reply_markup=get_categoryes_list(categoryes)
+                reply_markup=get_categoryes_list(categoryes, "admin_event")
             )
             await state.set_state(AddEvent.category)
 
@@ -562,7 +565,7 @@ async def admin_add_events_callback(
         authors = await orm_get_authors(session)
         await callback.message.answer(
             text=LEXICON_ADMIN["set_event_author"],
-            reply_markup=get_authors_list(authors)
+            reply_markup=get_authors_list(authors, "admin_event")
         )
         await state.set_state(AddEvent.author)
 
@@ -575,6 +578,211 @@ async def admin_add_events_callback(
         await callback.message.answer(
             text=LEXICON_ADMIN["event_added"],
             reply_markup=ADMIN_MENU_SELECTION_EVENT
+        )
+
+
+########################### Управление продуктами ##############################
+class AddProduct(StatesGroup):
+    """FSM Для заполнения модели 'product'"""
+    name = State()
+    description = State()
+    price = State()
+    image = State()
+    category = State()
+    author = State()
+    status = State()
+
+
+@admin_router.callback_query(F.data == "admin_product")
+async def admin_product_menu(
+    callback: CallbackQuery,
+    session: AsyncSession,
+    state: FSMContext
+):
+    """Главное меню раздела Продукты"""
+    if await state.get_state():
+        await state.clear()
+    if callback.message.photo:
+        await callback.message.edit_caption(
+            caption=LEXICON_ADMIN["admin_product_choise"],
+            reply_markup=ADMIN_MENU_SELECTION_PRODUCT
+        )
+        return
+    banner = await orm_get_banner(session, page="admin")
+    await callback.message.answer_photo(
+        banner.image,
+        caption=LEXICON_ADMIN["admin_product_choise"],
+        reply_markup=ADMIN_MENU_SELECTION_PRODUCT
+    )
+
+
+@admin_router.callback_query(F.data == "add_product")
+async def admin_add_product(callback: CallbackQuery, state: FSMContext):
+    """Добавление товара. Начало заполнения FSM AddEvent"""
+    await callback.answer()
+    await callback.message.answer(
+        text=LEXICON_ADMIN["set_product_name"],
+        reply_markup=BACK_TO_ADMIN_MENU
+    )
+    await state.set_state(AddProduct.name)
+
+
+@admin_router.message(
+        StateFilter(
+            AddProduct.name,
+            AddProduct.description,
+            AddProduct.price,
+            AddProduct.image,
+        ),
+        or_f(F.text, F.photo)
+    )
+async def admin_add_product_messages(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    """Обработка всех состояний типа Messqge при заполнении FSM AddProduct"""
+    actual_state = await state.get_state()
+
+    if actual_state == AddProduct.name:
+        if message.photo:
+            await message.answer(
+                text=LEXICON_ADMIN["photo_error_need_text"],
+            )
+            return
+        await state.update_data(name=message.text)
+        await message.delete()
+        await message.answer(
+            text=LEXICON_ADMIN["set_product_description"],
+            reply_markup=BACK_TO_ADMIN_MENU
+        )
+        await state.set_state(AddProduct.description)
+
+    elif actual_state == AddProduct.description:
+        if message.photo:
+            await message.answer(
+                text=LEXICON_ADMIN["photo_error_need_text"],
+            )
+            return
+        await state.update_data(description=message.text)
+        await message.delete()
+        await message.answer(
+            text=LEXICON_ADMIN["set_product_price"],
+            reply_markup=BACK_TO_ADMIN_MENU
+        )
+        await state.set_state(AddProduct.price)
+
+    elif actual_state == AddProduct.price:
+        if message.photo:
+            await message.answer(
+                text=LEXICON_ADMIN["photo_error_need_text"],
+            )
+            return
+        if not message.text.isdigit():
+            await message.delete()
+            await message.answer(
+                text=LEXICON_ADMIN["admin_works_add_error_price"],
+                reply_markup=BACK_TO_ADMIN_MENU
+            )
+            return
+        await state.update_data(price=message.text)
+        await message.delete()
+        await message.answer(
+            text=LEXICON_ADMIN["set_product_image"],
+            reply_markup=BACK_TO_ADMIN_MENU
+        )
+        await state.set_state(AddProduct.image)
+
+    elif actual_state == AddProduct.image:
+        if message.photo:
+            await state.update_data(image=message.photo[-1].file_id)
+        else:
+            await message.answer(
+                text=LEXICON_ADMIN["text_error_need_photo"],
+                reply_markup=BACK_TO_ADMIN_MENU
+            )
+            return
+
+        categoryes = await orm_get_categories(session)
+        await message.answer(
+            text=LEXICON_ADMIN["set_product_category"],
+            reply_markup=get_categoryes_list_by_product(
+                categoryes, "admin_product"
+            )
+        )
+        await state.set_state(AddProduct.category)
+
+
+
+
+@admin_router.message(
+        StateFilter(
+            AddProduct.name,
+            AddProduct.description,
+            AddProduct.price,
+            AddProduct.image,
+        ),
+    )
+async def admin_add_products_messages_error(message: Message):
+    """Обработка не правильных сообщений при заполнении FSM AddProduct"""
+    await message.answer(
+        text=LEXICON_ADMIN["error_need_photo_or_text"],
+        reply_markup=BACK_TO_ADMIN_MENU
+    )
+
+
+@admin_router.callback_query(
+        StateFilter(
+            AddProduct.category,
+            AddProduct.author,
+            AddProduct.status,
+        ),
+    )
+async def admin_add_events_callback(
+    callback: CallbackQuery, state: FSMContext, session: AsyncSession
+):
+    """Обработка всех состояний типа Callback при заполнении FSM AddProduct"""
+    await callback.answer()
+    actual_state = await state.get_state()
+    mes = callback.data
+
+    if actual_state == AddProduct.category:
+        await callback.message.delete()
+        category = mes.split("_")[-1]
+        await state.update_data(category=category)
+        authors = await orm_get_authors(session)
+        await callback.message.answer(
+            text=LEXICON_ADMIN["set_product_author"],
+            reply_markup=get_authors_list_by_product(
+                authors, "admin_product"
+            )
+        )
+        await state.set_state(AddProduct.author)
+
+    if actual_state == AddProduct.author:
+        await callback.message.delete()
+        author = mes.split("_")[-1]
+        await state.update_data(author=author)
+        await callback.message.answer(
+            text=LEXICON_ADMIN["set_product_status"],
+            reply_markup=ADMIN_MENU_SELECTION_STATUS
+        )
+        await state.set_state(AddProduct.status)
+
+    if actual_state == AddProduct.status:
+        if not (
+            mes.startswith("status_product") or mes.startswith("status_service")
+        ):
+            await callback.message.answer(
+                text='что то не так с состоянием',
+            )
+            return
+        await callback.message.delete()
+        status = mes.split("_")[-1]
+        await state.update_data(status=status)
+        data = await state.get_data()
+        await orm_create_product(session, data)
+        await callback.message.answer(
+            text=LEXICON_ADMIN["event_added"],
+            reply_markup=ADMIN_MENU_SELECTION_PRODUCT
         )
 
 # # EVENTS
