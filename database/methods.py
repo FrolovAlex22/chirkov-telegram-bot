@@ -169,39 +169,38 @@ async def orm_create_product(session: AsyncSession, product_info: dict):
     await session.commit()
 
 
-async def orm_get_events(session: AsyncSession): # TODO
-    query = select(Event)
-    result = await session.execute(query)
-    return result.scalars().all()
-
-
-async def orm_get_events_by_category(session: AsyncSession, category: int):
-    query = select(Event).where(Event.category == category)
-    result = await session.execute(query)
-    return result.scalars().all()
-
-
-async def orm_get_event_by_title(session: AsyncSession, title: str): # TODO
-    query = select(Event).where(Event.title == title)
-    result = await session.execute(query)
-    return result.scalar()
-
-
-async def orm_get_event_by_id(session: AsyncSession, id: int):
+async def orm_get_products_by_category(session: AsyncSession, category: int):
     query = (
-        select(Event).where(Event.id == id)
-        .options(joinedload(Event.authors))
-        .options(joinedload(Event.categorys))
+        select(Product).where(Product.category == category)
+        .options(joinedload(Product.author_product))
+        .options(joinedload(Product.product_category))
+    )
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
+# async def orm_get_event_by_title(session: AsyncSession, title: str): # TODO
+#     query = select(Event).where(Event.title == title)
+#     result = await session.execute(query)
+#     return result.scalar()
+
+
+async def orm_get_product_by_id(session: AsyncSession, id: int):
+    query = (
+        select(Product).where(Product.id == id)
+        .options(joinedload(Product.author_product))
     )
     result = await session.execute(query)
     return result.unique().scalar()
 
 
-async def orm_delete_event(session: AsyncSession, id: int):
-    query = delete(Event).where(Event.id == id)
+async def orm_delete_product(session: AsyncSession, id: int):
+    query = delete(Product).where(Product.id == id)
     await session.execute(query)
     await session.commit()
 # _______________________________________________________
+
+
 
 # async def orm_get_ceramic_master(session: AsyncSession, author_id: int):
 #     query = select(Author).where(Author.id == author_id)

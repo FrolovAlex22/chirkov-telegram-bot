@@ -54,10 +54,10 @@ class Event(Base):
     image: Mapped[str] = mapped_column(String(150), nullable=True)
     date: Mapped[datetime] = mapped_column(nullable=True)
     category: Mapped[int] = mapped_column(
-        ForeignKey("category.id"), nullable=False
+        ForeignKey("category.id"), nullable=True
     )
     author: Mapped[int] = mapped_column(
-        ForeignKey("author.id"), nullable=False
+        ForeignKey("author.id"), nullable=True
     )
     authors: Mapped["Author"] = relationship(backref="authors")
     categorys: Mapped["Category"] = relationship(
@@ -74,10 +74,10 @@ class Product(Base):
     price: Mapped[int] = mapped_column(nullable=True)
     image: Mapped[str] = mapped_column(String(150), nullable=True)
     category: Mapped[int] = mapped_column(
-        ForeignKey("category.id"), nullable=False
+        ForeignKey("category.id"), nullable=True
     )
     author: Mapped[int] = mapped_column(
-        ForeignKey("author.id"), nullable=False
+        ForeignKey("author.id"), nullable=True,
     )
     status: Mapped[StatusProduct] = mapped_column(
         default=StatusProduct.PRODUCT,
@@ -87,6 +87,12 @@ class Product(Base):
     created_at: Mapped[datetime] = mapped_column(
         index=True,
         server_default=func.now()
+    )
+    author_product: Mapped["Author"] = relationship(
+        backref="author_product"
+    )
+    product_category: Mapped["Category"] = relationship(
+        backref="product_category"
     )
 
 

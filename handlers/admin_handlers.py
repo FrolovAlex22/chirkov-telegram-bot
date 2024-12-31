@@ -8,8 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import session_maker
 from database.methods import (
-    orm_change_banner_image, orm_create_author, orm_create_event, orm_create_product, orm_delete_author, orm_delete_event, orm_get_authors, orm_get_authors_by_id, orm_get_authors_by_name, orm_get_banner, orm_get_categories, orm_get_category_by_name, orm_get_event_by_id, orm_get_events, orm_get_events_by_category, orm_get_info_pages
+    orm_change_banner_image, orm_create_author, orm_create_event, orm_create_product, orm_delete_author, orm_delete_event, orm_delete_product, orm_get_authors, orm_get_authors_by_id, orm_get_authors_by_name, orm_get_banner, orm_get_categories, orm_get_category_by_name, orm_get_event_by_id, orm_get_events, orm_get_events_by_category, orm_get_info_pages, orm_get_product_by_id, orm_get_products_by_category
 )
+from handlers.nadlers_methods import admin_author_menu_method
 from keyboards.admin_kb import (
 ADMIN_KB, ADMIN_MENU_SELECTION_AUTHOR, ADMIN_MENU_SELECTION_EVENT, ADMIN_MENU_SELECTION_PRODUCT, ADMIN_MENU_SELECTION_STATUS,
     BACK_TO_ADMIN_MENU, SELECTION_AFTER_ADDING_BANNER, get_authors_list, get_authors_list_by_product, get_categoryes_list, get_categoryes_list_by_product,
@@ -156,22 +157,25 @@ class AddAuthor(StatesGroup):
 @admin_router.callback_query(F.data == "admin_author")
 async def admin_author_menu(
     callback: CallbackQuery,
-    session: AsyncSession
+    session: AsyncSession,
+    state: FSMContext
 ):
     """Главное меню раздела Авторы"""
-    await callback.answer()
-    if callback.message.photo:
-        await callback.message.edit_caption(
-            caption=LEXICON_ADMIN["admin_author_choise"],
-            reply_markup=ADMIN_MENU_SELECTION_AUTHOR
-        )
-        return
-    banner = await orm_get_banner(session, page="admin")
-    await callback.message.answer_photo(
-
-        caption=LEXICON_ADMIN["admin_author_choise"],
-        reply_markup=ADMIN_MENU_SELECTION_AUTHOR
-    )
+    await admin_author_menu_method(state, session, callback)
+    # await state.clear()
+    # await callback.answer()
+    # if callback.message.photo:
+    #     await callback.message.edit_caption(
+    #         caption=LEXICON_ADMIN["admin_author_choise"],
+    #         reply_markup=ADMIN_MENU_SELECTION_AUTHOR
+    #     )
+    #     return
+    # banner = await orm_get_banner(session, page="admin")
+    # await callback.message.answer_photo(
+    #     photo=banner.image,
+    #     caption=LEXICON_ADMIN["admin_author_choise"],
+    #     reply_markup=ADMIN_MENU_SELECTION_AUTHOR
+    # )
 
 
 @admin_router.callback_query(F.data == "admin_author_list")
@@ -349,106 +353,6 @@ async def admin_author_menu(
     )
 
 
-@admin_router.callback_query(F.data == "admin_event_list")
-async def admin_events_list_choise_category(
-    callback: CallbackQuery,
-    session: AsyncSession
-):
-    """Выбор категории перед отображением списка мероприятий"""
-    await callback.answer()
-    categoryes_list = await orm_get_categories(session)
-    await callback.message.answer(
-        text=LEXICON_ADMIN["set_category"],
-        reply_markup=get_categoryes_list(categoryes_list)
-    )
-
-
-@admin_router.callback_query(F.data.startswith("choise_category_"))
-async def admin_events_list(
-    callback: CallbackQuery,
-    session: AsyncSession
-):
-    """Отображение списка мероприятий"""
-    await callback.answer()
-    category = callback.data.split("_")[-1]
-    for event in await orm_get_events_by_category(session, int(category)):
-        text_date = event.date.strftime("%d.%m.%Y")
-        await callback.message.answer(
-            text=f"<b>{event.title}</b> Дата: {text_date}",
-            reply_markup=get_callback_btns(
-                btns={
-                    "Удалить": f"delete_event_warning_{event.id}",
-                    "Подробнее": f"admin_event_info_{event.id}",
-                }
-            ),
-        )
-
-    await callback.message.answer(
-        text=LEXICON_ADMIN["events_list"],
-        reply_markup=ADMIN_MENU_SELECTION_EVENT
-    )
-
-
-@admin_router.callback_query(F.data.startswith("admin_event_info_"))
-async def admin_event_info(
-    callback: CallbackQuery, session: AsyncSession
-) -> None:
-    """Отображение информации о мероприятии"""
-    await callback.answer()
-    event_id = callback.data.split("_")[-1]
-    event = await orm_get_event_by_id(session, int(event_id))
-
-    text_date = event.date.strftime("%d.%m.%Y")
-    text = (
-        f"<b>{event.title}</b>\n\n<b>Описание:</b>\n{event.description}\n\n<b>"
-        f"Дата проведения:</b> {text_date}\nКатегория: {event.categorys.name}"
-        f"\nАвтор: {event.authors.name}"
-    )
-
-    await callback.message.answer_photo(
-        photo=event.image,
-        caption=text,
-        reply_markup=ADMIN_MENU_SELECTION_EVENT
-    )
-
-
-
-@admin_router.callback_query(F.data.startswith("delete_event_warning_"))
-async def delete_event_warning_(
-    callback: CallbackQuery,
-    session: AsyncSession
-) -> None:
-    """Предупреждение перед удалением мероприятия"""
-    event_id = callback.data.split("_")[-1]
-    event = await orm_get_event_by_id(session, int(event_id))
-    await callback.message.answer(
-        text=f"<b>ВНИМАНИЕ!</b>\nМероприятие <b>{event.title}</b> будет "
-             "удалено без возможности восстановления!!!",
-        reply_markup=get_callback_btns(
-            btns={
-                "Удалить безвозвратно": f"delete_event_{event_id}",
-                "Вернуться в раздел мероприятий": "admin_event"
-            },
-            sizes=(1, 1)
-        )
-    )
-
-
-@admin_router.callback_query(F.data.startswith("delete_event_"))
-async def deleted_event(
-    callback: CallbackQuery, session: AsyncSession
-) -> None:
-    """Удаляем мероприятие"""
-    event_id = callback.data.split("_")[-1]
-    await orm_delete_event(session, int(event_id))
-
-    await callback.answer("Собитие удалено!")
-    await callback.message.answer(
-        LEXICON_ADMIN["event_deleted"],
-        reply_markup=ADMIN_MENU_SELECTION_EVENT
-        )
-
-
 @admin_router.callback_query(F.data == "add_event")
 async def admin_events(callback: CallbackQuery, state: FSMContext):
     """Добавление события. Начало заполнения FSM AddEvent"""
@@ -554,7 +458,7 @@ async def admin_add_events_callback(
             categoryes = await orm_get_categories(session)
             await callback.message.answer(
                 text=LEXICON_ADMIN["set_event_category"],
-                reply_markup=get_categoryes_list(categoryes, "admin_event")
+                reply_markup=get_categoryes_list(categoryes)
             )
             await state.set_state(AddEvent.category)
 
@@ -565,7 +469,7 @@ async def admin_add_events_callback(
         authors = await orm_get_authors(session)
         await callback.message.answer(
             text=LEXICON_ADMIN["set_event_author"],
-            reply_markup=get_authors_list(authors, "admin_event")
+            reply_markup=get_authors_list(authors)
         )
         await state.set_state(AddEvent.author)
 
@@ -574,10 +478,111 @@ async def admin_add_events_callback(
         author = mes.split("_")[-1]
         await state.update_data(author=author)
         data = await state.get_data()
+        await state.clear()
         await orm_create_event(session, data)
         await callback.message.answer(
             text=LEXICON_ADMIN["event_added"],
             reply_markup=ADMIN_MENU_SELECTION_EVENT
+        )
+
+
+@admin_router.callback_query(F.data == "admin_event_list")
+async def admin_events_list_choise_category(
+    callback: CallbackQuery,
+    session: AsyncSession
+):
+    """Выбор категории перед отображением списка мероприятий"""
+    await callback.answer()
+    categoryes_list = await orm_get_categories(session)
+    await callback.message.answer(
+        text=LEXICON_ADMIN["set_category"],
+        reply_markup=get_categoryes_list(categoryes_list)
+    )
+
+
+@admin_router.callback_query(F.data.startswith("choise_category_"))
+async def admin_events_list(
+    callback: CallbackQuery,
+    session: AsyncSession
+):
+    """Отображение списка мероприятий"""
+    await callback.answer()
+    category = callback.data.split("_")[-1]
+    for event in await orm_get_events_by_category(session, int(category)):
+        text_date = event.date.strftime("%d.%m.%Y")
+        await callback.message.answer(
+            text=f"<b>{event.title}</b> Дата: {text_date}",
+            reply_markup=get_callback_btns(
+                btns={
+                    "Удалить": f"delete_event_warning_{event.id}",
+                    "Подробнее": f"admin_event_info_{event.id}",
+                }
+            ),
+        )
+
+    await callback.message.answer(
+        text=LEXICON_ADMIN["events_list"],
+        reply_markup=ADMIN_MENU_SELECTION_EVENT
+    )
+
+
+@admin_router.callback_query(F.data.startswith("admin_event_info_"))
+async def admin_event_info(
+    callback: CallbackQuery, session: AsyncSession
+) -> None:
+    """Отображение информации о мероприятии"""
+    await callback.answer()
+    event_id = callback.data.split("_")[-1]
+    event = await orm_get_event_by_id(session, int(event_id))
+
+    text_date = event.date.strftime("%d.%m.%Y")
+    text = (
+        f"<b>{event.title}</b>\n\n<b>Описание:</b>\n{event.description}\n\n<b>"
+        f"Дата проведения:</b> {text_date}\nКатегория: {event.categorys.name}"
+        f"\nАвтор: {event.authors.name}"
+    )
+
+    await callback.message.answer_photo(
+        photo=event.image,
+        caption=text,
+        reply_markup=ADMIN_MENU_SELECTION_EVENT
+    )
+
+
+
+@admin_router.callback_query(F.data.startswith("delete_event_warning_"))
+async def delete_event_warning_(
+    callback: CallbackQuery,
+    session: AsyncSession
+) -> None:
+    """Предупреждение перед удалением мероприятия"""
+    event_id = callback.data.split("_")[-1]
+    event = await orm_get_event_by_id(session, int(event_id))
+    await callback.message.answer(
+        text=f"<b>ВНИМАНИЕ!</b>\nМероприятие <b>{event.title}</b> будет "
+             "удалено без возможности восстановления!!!",
+        reply_markup=get_callback_btns(
+            btns={
+                "Удалить безвозвратно": f"delete_event_{event_id}",
+                "Вернуться в раздел мероприятий": "admin_event"
+            },
+            sizes=(1, 1)
+        )
+    )
+
+
+@admin_router.callback_query(F.data.startswith("delete_event_"))
+async def deleted_event(
+    callback: CallbackQuery, session: AsyncSession
+) -> None:
+    """Удаляем мероприятие"""
+    event_id = callback.data.split("_")[-1]
+    await orm_delete_event(session, int(event_id))
+
+    await callback.answer("Собитие удалено!")
+    await callback.message.answer(
+        LEXICON_ADMIN["event_deleted"],
+        reply_markup=ADMIN_MENU_SELECTION_EVENT
         )
 
 
@@ -704,9 +709,7 @@ async def admin_add_product_messages(
         categoryes = await orm_get_categories(session)
         await message.answer(
             text=LEXICON_ADMIN["set_product_category"],
-            reply_markup=get_categoryes_list_by_product(
-                categoryes, "admin_product"
-            )
+            reply_markup=get_categoryes_list_by_product(categoryes)
         )
         await state.set_state(AddProduct.category)
 
@@ -736,7 +739,7 @@ async def admin_add_products_messages_error(message: Message):
             AddProduct.status,
         ),
     )
-async def admin_add_events_callback(
+async def admin_add_products_callback(
     callback: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     """Обработка всех состояний типа Callback при заполнении FSM AddProduct"""
@@ -751,9 +754,7 @@ async def admin_add_events_callback(
         authors = await orm_get_authors(session)
         await callback.message.answer(
             text=LEXICON_ADMIN["set_product_author"],
-            reply_markup=get_authors_list_by_product(
-                authors, "admin_product"
-            )
+            reply_markup=get_authors_list_by_product(authors)
         )
         await state.set_state(AddProduct.author)
 
@@ -775,15 +776,115 @@ async def admin_add_events_callback(
                 text='что то не так с состоянием',
             )
             return
+
         await callback.message.delete()
         status = mes.split("_")[-1]
         await state.update_data(status=status)
         data = await state.get_data()
+        await state.clear()
         await orm_create_product(session, data)
         await callback.message.answer(
-            text=LEXICON_ADMIN["event_added"],
+            text=LEXICON_ADMIN["product_added"],
             reply_markup=ADMIN_MENU_SELECTION_PRODUCT
         )
+
+
+@admin_router.callback_query(F.data == "admin_product_list")
+async def admin_product_list_choise_category(
+    callback: CallbackQuery,
+    session: AsyncSession
+):
+    """Выбор категории перед отображением списка продуктов"""
+    await callback.answer()
+    categoryes_list = await orm_get_categories(session)
+    await callback.message.answer(
+        text=LEXICON_ADMIN["set_category_product"],
+        reply_markup=get_categoryes_list_by_product(categoryes_list)
+    )
+
+
+@admin_router.callback_query(F.data.startswith("product_choise_category_"))
+async def admin_product_list(
+    callback: CallbackQuery,
+    session: AsyncSession
+):
+    """Отображение списка продуктов в выбранной категории"""
+    await callback.answer()
+    category = callback.data.split("_")[-1]
+    for product in await orm_get_products_by_category(session, int(category)):
+        await callback.message.answer(
+            text=f"<b>{product.name}\n</b>Автор: {product.author_product.name}",
+            reply_markup=get_callback_btns(
+                btns={
+                    "Удалить": f"delete_product_warning_{product.id}",
+                    "Подробнее": f"admin_product_info_{product.id}",
+                }
+            ),
+        )
+    await callback.message.answer(
+        text=LEXICON_ADMIN["products_list"],
+        reply_markup=ADMIN_MENU_SELECTION_PRODUCT
+    )
+
+
+@admin_router.callback_query(F.data.startswith("admin_product_info_"))
+async def admin_product_info(
+    callback: CallbackQuery, session: AsyncSession
+) -> None:
+    """Отображение информации о товаре"""
+    await callback.answer()
+    product_id = callback.data.split("_")[-1]
+    product = await orm_get_product_by_id(session, int(product_id))
+
+    text = (
+        f"<b>{product.name}</b>\n\n<b>Описание:</b>\n{product.description}\n\n<b>"
+        f"Цена:</b> {product.price}\nАвтор: {product.author_product.name}"
+    )
+
+    await callback.message.answer_photo(
+        photo=product.image,
+        caption=text,
+        reply_markup=ADMIN_MENU_SELECTION_PRODUCT
+    )
+
+
+
+@admin_router.callback_query(F.data.startswith("delete_product_warning_"))
+async def delete_product_warning_(
+    callback: CallbackQuery,
+    session: AsyncSession
+) -> None:
+    """Предупреждение перед удалением товара"""
+    await callback.answer()
+    product_id = callback.data.split("_")[-1]
+    product = await orm_get_product_by_id(session, int(product_id))
+    await callback.message.answer(
+        text=f"<b>ВНИМАНИЕ!</b>\Продукт <b>{product.name}</b> будет "
+             "удалено без возможности восстановления!!!",
+        reply_markup=get_callback_btns(
+            btns={
+                "Удалить безвозвратно": f"delete_product_{product_id}",
+                "Вернуться в раздел товаров": "admin_product"
+            },
+            sizes=(1, 1)
+        )
+    )
+
+
+@admin_router.callback_query(F.data.startswith("delete_product_"))
+async def deleted_event(
+    callback: CallbackQuery, session: AsyncSession
+) -> None:
+    """Удаляем продукт"""
+    product_id = callback.data.split("_")[-1]
+    await orm_delete_product(session, int(product_id))
+
+    await callback.answer("Товар удалён!")
+    await callback.message.answer(
+        LEXICON_ADMIN["product_deleted"],
+        reply_markup=ADMIN_MENU_SELECTION_PRODUCT
+        )
+#################################################################################
 
 # # EVENTS
 # @admin_router.callback_query(F.data == "admin_events")

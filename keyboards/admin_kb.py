@@ -62,7 +62,6 @@ ADMIN_MENU_SELECTION_EVENT = get_callback_btns(
 
 def get_categoryes_list(
     categoryes_list: list[Category],
-    return_cb: str,
     sizes: tuple[int] = (1, ),
 ) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
@@ -74,14 +73,13 @@ def get_categoryes_list(
         )
     )
     keyboard.add(InlineKeyboardButton(
-        text="В меню раздела мероприятия", callback_data=return_cb)
+        text="В меню раздела мероприятия", callback_data="admin_event")
     )
     return keyboard.adjust(*sizes).as_markup()
 
 
 def get_authors_list(
     authors_list: list[Author],
-    return_cb: str,
     sizes: tuple[int] = (1, ),
 ) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
@@ -93,7 +91,7 @@ def get_authors_list(
         )
     )
     keyboard.add(InlineKeyboardButton(
-        text="В меню раздела мероприятия", callback_data=return_cb)
+        text="В меню раздела мероприятия", callback_data="admin_event")
     )
     return keyboard.adjust(*sizes).as_markup()
 
@@ -125,7 +123,6 @@ ADMIN_MENU_SELECTION_STATUS = get_callback_btns(
 
 def get_categoryes_list_by_product(
     categoryes_list: list[Category],
-    return_cb: str,
     sizes: tuple[int] = (1, ),
 ) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
@@ -137,14 +134,13 @@ def get_categoryes_list_by_product(
         )
     )
     keyboard.add(InlineKeyboardButton(
-        text="В меню раздела мероприятия", callback_data=return_cb)
+        text="В меню раздела мероприятия", callback_data="admin_product")
     )
     return keyboard.adjust(*sizes).as_markup()
 
 
 def get_authors_list_by_product(
     authors_list: list[Author],
-    return_cb: str,
     sizes: tuple[int] = (1, ),
 ) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
@@ -156,7 +152,7 @@ def get_authors_list_by_product(
         )
     )
     keyboard.add(InlineKeyboardButton(
-        text="В меню раздела мероприятия", callback_data=return_cb)
+        text="В меню раздела мероприятия", callback_data="admin_product")
     )
     return keyboard.adjust(*sizes).as_markup()
 

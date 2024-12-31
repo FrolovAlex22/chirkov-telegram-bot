@@ -135,9 +135,10 @@ LEXICON_ADMIN = {
     "set_product_category": "<b>Выберите категорию из списка</b>",
     "set_product_author": "<b>Выберите автора</b>",
     "set_product_status": "<b>Выберите статус продукта</b>",
-    # "product_added": "<b>Продукт успешно добавлен</b>",
-    # "products_list": "<b>Выше списк продуктов</b> ⏫",
-    # "product_deleted": "Продукт удален из базы данных.",
+    "product_added": "<b>Товар успешно добавлен</b>",
+    "set_category_product": "<b>Выберите категорию продуктов из списка</b>",
+    "products_list": "<b>Выше списк продуктов выбранной категории</b> ⏫",
+    "product_deleted": "Товар удален из базы данных.",
 }
 
 

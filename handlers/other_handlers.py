@@ -20,21 +20,6 @@ other_router.callback_query.middleware(
 )
 
 
-# @other_router.message(CommandStart())
-# async def start_cmd(message: Message, session: AsyncSession, state: FSMContext):
-#     """Сообщение в случае команды /start"""
-#     if state:
-#         await state.clear()
-#     banner = await orm_get_banner(session, page="main")
-#     if not banner.image:
-#         await message.answer(
-#            LEXICON_OTHER["need_banner"],
-#         )
-#     await message.answer_photo(
-#         banner.image, caption=banner.description, reply_markup=MAIN_MENU
-#     )
-
-
 @other_router.message(CommandStart())
 async def start_cmd(message: Message, session: AsyncSession):
     media, reply_markup = await get_menu_content(session, menu_name="main")
