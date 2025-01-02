@@ -131,7 +131,7 @@ LEXICON_ADMIN = {
     "set_product_price": "Укажите цену.\n<b>Цена должна быть целым числом!</b>",
     "set_product_image": "<b>Добавте фоторграфию</b>",
     "set_product_category": "<b>Выберите категорию из списка</b>",
-    "photo_error_need_text": "<b>Цена должна состоять из целых чисел</b>",
+    # "photo_error_need_text": "<b>Цена должна состоять из целых чисел</b>",
     "set_product_category": "<b>Выберите категорию из списка</b>",
     "set_product_author": "<b>Выберите автора</b>",
     "set_product_status": "<b>Выберите статус продукта</b>",
