@@ -37,6 +37,7 @@ class ProductCallBack(CallbackData, prefix="product"):
     pr_type: str = "PRODUCT"
     product_id: int | None = None
     author_id: int | None = None
+    page: int = 1
 
 
 class EventCallBack(CallbackData, prefix="event"):
@@ -71,7 +72,6 @@ def get_user_main_btns(*, sizes: tuple[int] = (1,)):
 
 
 def get_user_ceramic_btns(*, sizes: tuple[int] = (1, )):
-    # Переделать на пагинацию, с продуктами категории события!!!!!!!!!!!!!!!!!!
     keyboard = InlineKeyboardBuilder()
     keyboard.add(
         InlineKeyboardButton(
@@ -203,40 +203,35 @@ def get_user_product_list_back_btns(category: str, sizes: tuple[int] = (2,)):
     return keyboard.adjust(*sizes).as_markup()
 
 
-# # _____________________________________________________________________________
+def get_products_btns(
+    *,
+    page: int,
+    category: str,
+    pagination_btns: dict,
+    sizes: tuple[int] = (2, 1)
+):
+    keyboard = InlineKeyboardBuilder()
 
-# class ProductCallBack(CallbackData, prefix="product_callback"):
-#     page: int = 1
-#     product_id: int | None = None
+    keyboard.add(InlineKeyboardButton(
+        text="В главное меню", callback_data="main_menu")
+    )
 
+    keyboard.adjust(*sizes)
 
-# def get_products_btns(
-#     *,
-#     page: int,
-#     pagination_btns: dict,
-#     sizes: tuple[int] = (2, 1)
-# ):
-#     keyboard = InlineKeyboardBuilder()
+    row = []
+    for text, menu_name in pagination_btns.items():
+        if menu_name == "next":
+            row.append(InlineKeyboardButton(
+                text=text,
+                callback_data=ProductCallBack(
+                    category=category,
+                    page=page + 1).pack()))
 
-#     keyboard.add(InlineKeyboardButton(
-#         text="В главное меню", callback_data="main_menu")
-#     )
+        elif menu_name == "previous":
+            row.append(InlineKeyboardButton(
+                text=text,
+                callback_data=ProductCallBack(
+                    category=category,
+                    page=page - 1).pack()))
 
-#     keyboard.adjust(*sizes)
-
-#     row = []
-#     for text, menu_name in pagination_btns.items():
-#         if menu_name == "next":
-#             row.append(InlineKeyboardButton(
-#                 text=text,
-#                 callback_data=ProductCallBack(
-#                     page=page + 1).pack()))
-
-#         elif menu_name == "previous":
-#             row.append(InlineKeyboardButton(
-#                 text=text,
-#                 callback_data=ProductCallBack(
-
-#                         page=page - 1).pack()))
-
-#     return keyboard.row(*row).as_markup()
+    return keyboard.row(*row).as_markup()

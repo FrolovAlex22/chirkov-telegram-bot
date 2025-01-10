@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import session_maker
 from database.methods import orm_get_banner, orm_get_products_by_type_and_category
-from handlers.handlers_user_methods import get_menu_content, get_product_content, get_user_service_info
+from handlers.handlers_user_methods import get_menu_content, get_product_content, get_user_service_info, products
 from keyboards.inline import MenuCallBack, ProductCallBack, get_user_main_btns
 from lexicon.lexicon import LEXICON_OTHER
 from middlewares.db import DataBaseSession
@@ -72,47 +72,34 @@ async def user_menu(
     callback_data: ProductCallBack,
     session: AsyncSession
 ):
-
     """Отображение товаров в зависимости от типа и категории"""
+    print("0")
     if not callback_data.product_id:
-        # if callback_data.pr_type == "PRODUCT":
-        #     media, reply_markup = await get_menu_content(
-        #         session,
-        #         menu_name=callback_data.menu_name,
-        #     )
-
-        #     await callback.message.edit_media(media=media, reply_markup=reply_markup)
-        #     await callback.answer()
-
-        if callback_data.pr_type == "SERVICE":
+        if callback_data.pr_type == "PRODUCT":
+            print("1")
+            media, kb = await products(
+                session,
+                page=callback_data.page,
+                category=callback_data.category
+            )
+            await callback.message.edit_media(media=media, reply_markup=kb)
+        elif callback_data.pr_type == "SERVICE":
             await callback.answer()
-            text, reply_markup = await get_product_content(
+            text, kb = await get_product_content(
                 session,
                 category=callback_data.category,
                 type=callback_data.pr_type,
             )
-
-            await callback.message.edit_caption(
-                caption=text,
-                reply_markup=reply_markup
-            )
-
+            await callback.message.edit_caption(caption=text, reply_markup=kb)
     else:
-        # if callback_data.pr_type == "PRODUCT":
-        #     media, reply_markup = await get_menu_content(
-        #         session,
-        #         menu_name=callback_data.menu_name,
-        #     )
-
-        #     await callback.message.edit_media(media=media, reply_markup=reply_markup)
         if callback_data.pr_type == "SERVICE":
             await callback.answer()
-            image, reply_markup = await get_user_service_info(
+            image, kb = await get_user_service_info(
                 session, callback_data.category, int(callback_data.product_id)
             )
 
             await callback.message.edit_media(
                 media=image,
                 caption=image.caption,
-                reply_markup=reply_markup
+                reply_markup=kb
             )

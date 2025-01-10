@@ -1,8 +1,9 @@
 from aiogram.types import InputMediaPhoto
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.methods import orm_get_banner, orm_get_category_by_name, orm_get_product_by_id, orm_get_products_by_type_and_category
+from database.methods import orm_get_banner, orm_get_category_by_name, orm_get_product_by_id, orm_get_products_by_category, orm_get_products_by_type_and_category
 from keyboards.inline import (
+    get_products_btns,
     get_user_art_galery_btns,
     get_user_ceramic_btns,
     get_user_events_btns,
@@ -12,6 +13,7 @@ from keyboards.inline import (
     get_user_vr_btns
 )
 from lexicon.lexicon import LEXICON_PRODUCT_SERVICE
+from utils.paginator import Paginator
 
 
 ############################ USER METHODS ##########################
@@ -111,3 +113,46 @@ async def get_user_service_info(
     kb = get_user_product_list_back_btns(category, (2, ))
 
     return image, kb
+
+
+def pages(paginator: Paginator):
+    """Кнопки для пагинации"""
+    btns = dict()
+    if paginator.has_previous():
+        btns["◀ Пред."] = "previous"
+
+    if paginator.has_next():
+        btns["След. ▶"] = "next"
+
+    return btns
+
+
+async def products(session: AsyncSession, page: int, category: str):
+    """Получение списка продуктов категории домашний уход"""
+    category_id = await orm_get_category_by_name(session, category)
+    products = await orm_get_products_by_category(
+        session, category=category_id.id
+    )
+
+    paginator = Paginator(products, page=page)
+    product = paginator.get_page()[0]
+
+    image = InputMediaPhoto(
+        media=product.image,
+        caption=f"<strong>{product.name}"
+                f"</strong>\n{product.description}\n"
+                f"Стоимость: {round(product.price, 2)}\n"
+                f"<strong>Товар {paginator.page}"
+                f" из {paginator.pages}</strong>",
+    )
+
+    pagination_btns = pages(paginator)
+
+    kbds = get_products_btns(
+        category=category,
+        page=page,
+        pagination_btns=pagination_btns,
+        # product_id=product.id,
+    )
+
+    return image, kbds
