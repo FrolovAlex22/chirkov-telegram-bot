@@ -134,7 +134,7 @@ async def admin_author_add_input_telegram_id_method(message: Message):
 
 
 async def admin_author_add_input_category_method(
-          message: Message, data: dict, session: AsyncSession,
+        message: Message, data: dict, session: AsyncSession,
     ):
     await message.delete()
     if message.text not in LIST_CATEGORY:

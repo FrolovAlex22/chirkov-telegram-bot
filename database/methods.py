@@ -179,12 +179,6 @@ async def orm_get_products_by_category(session: AsyncSession, category: int):
     return result.scalars().all()
 
 
-# async def orm_get_event_by_title(session: AsyncSession, title: str): # TODO
-#     query = select(Event).where(Event.title == title)
-#     result = await session.execute(query)
-#     return result.scalar()
-
-
 async def orm_get_product_by_id(session: AsyncSession, id: int):
     query = (
         select(Product).where(Product.id == id)
@@ -192,6 +186,20 @@ async def orm_get_product_by_id(session: AsyncSession, id: int):
     )
     result = await session.execute(query)
     return result.unique().scalar()
+
+
+async def orm_get_products_by_type_and_category(
+        session: AsyncSession, category: int, type: str
+    ):
+    query = (
+        select(Product).where(
+            Product.category == category, Product.status == type
+        )
+        .options(joinedload(Product.author_product))
+        .options(joinedload(Product.product_category))
+    )
+    result = await session.execute(query)
+    return result.scalars().all()
 
 
 async def orm_delete_product(session: AsyncSession, id: int):

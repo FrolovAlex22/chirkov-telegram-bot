@@ -2,6 +2,16 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from database.models import Product
+
+
+CATEGORY_MENU_NAME_DICT = {
+    "Мастерская керамики": "ceramic",
+    "Виртуальная реальность": "vr",
+    "Арт галерея": "art_galery",
+    "Мероприятия": "events"
+}
+
 
 def get_callback_btns(
     *,
@@ -22,13 +32,19 @@ class MenuCallBack(CallbackData, prefix="menu"):
     menu_name: str
 
 
-class ProductCallBack(CallbackData, prefix="ceramic"):
-    level: int
-    type: str = "PRODUCT"
-    product_id: int
+class ProductCallBack(CallbackData, prefix="product"):
+    category: str
+    pr_type: str = "PRODUCT"
+    product_id: int | None = None
+    author_id: int | None = None
 
 
+class EventCallBack(CallbackData, prefix="event"):
+    category: str
+    event_id: int | None = None
 
+
+###################### Главное меню и основные разделы #########################
 def get_user_main_btns(*, sizes: tuple[int] = (1,)):
     keyboard = InlineKeyboardBuilder()
     btns = {
@@ -38,18 +54,53 @@ def get_user_main_btns(*, sizes: tuple[int] = (1,)):
         "Художественная галерея": "art_galery",
     }
     for text, menu_name in btns.items():
-        if menu_name == 'events':
+        if menu_name == "events":
             keyboard.add(InlineKeyboardButton(text=text,
                     callback_data=MenuCallBack(menu_name=menu_name).pack()))
-        elif menu_name == 'ceramic':
+        elif menu_name == "ceramic":
             keyboard.add(InlineKeyboardButton(text=text,
                     callback_data=MenuCallBack(menu_name=menu_name).pack()))
-        elif menu_name == 'vr':
+        elif menu_name == "vr":
             keyboard.add(InlineKeyboardButton(text=text,
                     callback_data=MenuCallBack(menu_name=menu_name).pack()))
-        elif menu_name == 'art_galery':
+        elif menu_name == "art_galery":
             keyboard.add(InlineKeyboardButton(text=text,
                     callback_data=MenuCallBack(menu_name=menu_name).pack()))
+
+    return keyboard.adjust(*sizes).as_markup()
+
+
+def get_user_ceramic_btns(*, sizes: tuple[int] = (1, )):
+    # Переделать на пагинацию, с продуктами категории события!!!!!!!!!!!!!!!!!!
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(
+        InlineKeyboardButton(
+            text="Запись",
+            callback_data=ProductCallBack(
+                category="Мастерская керамики",
+                pr_type="SERVICE"
+            ).pack()
+        )
+    )
+    keyboard.add(
+        InlineKeyboardButton(
+            text="Изделия керамики в продаже",
+            callback_data=ProductCallBack(
+                category="Мастерская керамики",
+                pr_type="PRODUCT"
+            ).pack()
+        )
+    )
+    keyboard.add(
+        InlineKeyboardButton(
+            text="Предстоящие мероприятия",
+            callback_data=EventCallBack(
+                category="Мастерская керамики",
+            ).pack()
+        )
+    )
+    keyboard.add(InlineKeyboardButton(text="Назад",
+                callback_data=MenuCallBack(menu_name="main").pack()))
 
     return keyboard.adjust(*sizes).as_markup()
 
@@ -58,10 +109,10 @@ def get_user_events_btns(*, sizes: tuple[int] = (2,)):
     # Переделать на пагинацию, с продуктами категории события!!!!!!!!!!!!!!!!!!
     keyboard = InlineKeyboardBuilder()
 
-    keyboard.add(InlineKeyboardButton(text='Назад',
-                callback_data=MenuCallBack(menu_name='main').pack()))
-    keyboard.add(InlineKeyboardButton(text='События 🛒',
-                callback_data=MenuCallBack(menu_name='main').pack()))
+    keyboard.add(InlineKeyboardButton(text="Назад",
+                callback_data=MenuCallBack(menu_name="main").pack()))
+    keyboard.add(InlineKeyboardButton(text="События 🛒",
+                callback_data=MenuCallBack(menu_name="main").pack()))
 
     # for c in categories:
     #     keyboard.add(InlineKeyboardButton(text=c.name,
@@ -70,30 +121,23 @@ def get_user_events_btns(*, sizes: tuple[int] = (2,)):
     return keyboard.adjust(*sizes).as_markup()
 
 
-def get_user_ceramic_btns(*, sizes: tuple[int] = (2,)):
-    # Переделать на пагинацию, с продуктами категории события!!!!!!!!!!!!!!!!!!
-    keyboard = InlineKeyboardBuilder()
-
-    keyboard.add(InlineKeyboardButton(text='Назад',
-                callback_data=MenuCallBack(menu_name='main').pack()))
-    keyboard.add(InlineKeyboardButton(text='Мастер классы',
-                callback_data=CeramicCallBack(level=1).pack()))
-    keyboard.add(InlineKeyboardButton(text='Готовые изделия 🛒',
-                callback_data=MenuCallBack(menu_name='main').pack()))
-    keyboard.add(InlineKeyboardButton(text='Готовые изделия 🛒',
-                callback_data=MenuCallBack(menu_name='main').pack()))
-
-    return keyboard.adjust(*sizes).as_markup()
-
-
 def get_user_vr_btns(*, sizes: tuple[int] = (2,)):
-    # Переделать на пагинацию, с продуктами категории события!!!!!!!!!!!!!!!!!!
     keyboard = InlineKeyboardBuilder()
-
-    keyboard.add(InlineKeyboardButton(text='Назад',
-                callback_data=MenuCallBack(menu_name='main').pack()))
-    keyboard.add(InlineKeyboardButton(text='1663 🛒',
-                callback_data=MenuCallBack(menu_name='main').pack()))
+    keyboard.add(
+        InlineKeyboardButton(
+            text="Запись на посещение",
+            callback_data=ProductCallBack(
+                category="Виртуальная реальность",
+                pr_type="SERVICE"
+            ).pack()
+        )
+    )
+    keyboard.add(
+        InlineKeyboardButton(
+            text="Назад",
+            callback_data=MenuCallBack(menu_name="main").pack()
+        )
+    )
 
     return keyboard.adjust(*sizes).as_markup()
 
@@ -101,12 +145,63 @@ def get_user_vr_btns(*, sizes: tuple[int] = (2,)):
 def get_user_art_galery_btns(*, sizes: tuple[int] = (2,)):
     keyboard = InlineKeyboardBuilder()
 
-    keyboard.add(InlineKeyboardButton(text='Назад',
-                callback_data=MenuCallBack(menu_name='main').pack()))
-    keyboard.add(InlineKeyboardButton(text='art_galery 🛒',
-                callback_data=MenuCallBack(menu_name='main').pack()))
+    keyboard.add(InlineKeyboardButton(text="Назад",
+                callback_data=MenuCallBack(menu_name="main").pack()))
+    keyboard.add(InlineKeyboardButton(text="art_galery 🛒",
+                callback_data=MenuCallBack(menu_name="main").pack()))
 
     return keyboard.adjust(*sizes).as_markup()
+
+
+######################## Работа с продуктами ##################################
+def get_user_product_list_btns(
+        products: list[Product],
+        category: str,
+        sizes: tuple[int] = (2,)
+    ):
+
+    keyboard = InlineKeyboardBuilder()
+
+    for num, p in enumerate(products, start=1):
+        text = f"{num}. {p.name}. Цена - {p.price} руб."
+        keyboard.add(InlineKeyboardButton(text=text,
+                callback_data=ProductCallBack(
+                    product_id=str(p.id),
+                    pr_type="SERVICE",
+                    category=category
+                ).pack()))
+
+    keyboard.add(
+        InlineKeyboardButton(
+            text="Верунться назад",
+            callback_data=MenuCallBack(
+                menu_name=CATEGORY_MENU_NAME_DICT[category]
+            ).pack()
+        )
+    )
+    keyboard.add(
+        InlineKeyboardButton(
+            text="В главное меню",
+            callback_data=MenuCallBack(menu_name="main").pack()
+            )
+        )
+
+    return keyboard.adjust(*sizes).as_markup()
+
+
+def get_user_product_list_back_btns(category: str, sizes: tuple[int] = (2,)):
+
+    keyboard = InlineKeyboardBuilder()
+
+    keyboard.add(InlineKeyboardButton(text="Верунться назад",
+                callback_data=MenuCallBack(
+                    menu_name=CATEGORY_MENU_NAME_DICT[category]
+                ).pack()))
+    keyboard.add(InlineKeyboardButton(text="В главное меню",
+                callback_data=MenuCallBack(menu_name="main").pack()))
+
+    return keyboard.adjust(*sizes).as_markup()
+
 
 # # _____________________________________________________________________________
 
@@ -124,7 +219,7 @@ def get_user_art_galery_btns(*, sizes: tuple[int] = (2,)):
 #     keyboard = InlineKeyboardBuilder()
 
 #     keyboard.add(InlineKeyboardButton(
-#         text='В главное меню', callback_data='main_menu')
+#         text="В главное меню", callback_data="main_menu")
 #     )
 
 #     keyboard.adjust(*sizes)
