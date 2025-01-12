@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.engine import session_maker
 from database.methods import (
     orm_change_banner_image, orm_create_product, orm_delete_product,
-    orm_get_authors, orm_get_banner, orm_get_categories, orm_get_info_pages,
+    orm_get_authors, orm_get_banner, orm_get_categories, orm_get_category_by_name, orm_get_info_pages,
     orm_get_product_by_id, orm_get_products_by_category
 )
 from handlers.handlers_author_methods import (
@@ -223,16 +223,20 @@ async def admin_author_add_input_fields(
     actual_state = await state.get_state()
 
     if actual_state == AddAuthor.name:
-        await admin_author_add_input_name_method(message, state)
+        await admin_author_add_input_name_method(message)
         await state.update_data(name=message.text)
         await state.set_state(AddAuthor.telegram_id)
 
     elif actual_state == AddAuthor.telegram_id:
-        await admin_author_add_input_telegram_id_method(message, state)
+        await admin_author_add_input_telegram_id_method(message)
         await state.update_data(telegram_id=message.text)
         await state.set_state(AddAuthor.category)
 
     elif actual_state == AddAuthor.category:
+        category_id = await orm_get_category_by_name(
+            session, message.text
+        )
+        await state.update_data(category=str(category_id.id))
         data = await state.get_data()
         answer = await admin_author_add_input_category_method(
             message, data, session

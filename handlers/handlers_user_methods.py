@@ -1,22 +1,26 @@
 from aiogram.types import InputMediaPhoto
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.methods import orm_get_banner, orm_get_category_by_name, orm_get_product_by_id, orm_get_products_by_category, orm_get_products_by_type_and_category
+from database.methods import orm_get_authors_by_category, orm_get_banner, orm_get_category_by_name, orm_get_events_by_category, orm_get_events_by_category_and_date, orm_get_product_by_id, orm_get_products_by_author_and_category, orm_get_products_by_category, orm_get_products_by_type_and_category
 from keyboards.inline import (
+    CATEGORY_MENU_NAME_DICT,
+    EventCallBack,
     get_products_btns,
     get_user_art_galery_btns,
+    get_user_art_galery_lvl1_btns,
     get_user_ceramic_btns,
+    get_user_event_list_btns,
     get_user_events_btns,
     get_user_main_btns,
     get_user_product_list_back_btns,
     get_user_product_list_btns,
     get_user_vr_btns
 )
-from lexicon.lexicon import LEXICON_PRODUCT_SERVICE
+from lexicon.lexicon import CATEGORY_MENU_NAME_REVERSE_DICT, LEXICON_ART_GALLERY, LEXICON_EVENT, LEXICON_PRODUCT_SERVICE
 from utils.paginator import Paginator
 
 
-############################ USER METHODS ##########################
+############################ MAIN MENU METHODS ##########################
 async def main_menu(session, menu_name):
     banner = await orm_get_banner(session, menu_name)
     image = InputMediaPhoto(media=banner.image, caption=banner.description)
@@ -62,6 +66,15 @@ async def art_galery(session, menu_name):
     return image, kbds
 
 
+async def art_galery_handlers(session, callback_text, category):
+    text = LEXICON_ART_GALLERY["art_birsk_masters"]
+    category_id = await orm_get_category_by_name(session, category)
+    authors = await orm_get_authors_by_category(session, category_id.id)
+    kbds = get_user_art_galery_lvl1_btns(authors, (1, ))
+
+    return text, kbds
+
+
 async def get_menu_content(
     session: AsyncSession,
     menu_name: str,
@@ -85,7 +98,6 @@ async def get_product_content(
     type: str,
 ):
     category_id = await orm_get_category_by_name(session, category)
-    print(category_id.id, type)
     products = await orm_get_products_by_type_and_category(
         session, category_id.id, type
     )
@@ -127,13 +139,22 @@ def pages(paginator: Paginator):
     return btns
 
 
-async def products(session: AsyncSession, page: int, category: str):
+async def products(
+        session: AsyncSession, page: int, category: str, author_id: str | None
+    ):
     """Получение списка продуктов категории домашний уход"""
     category_id = await orm_get_category_by_name(session, category)
-    products = await orm_get_products_by_category(
-        session, category=category_id.id
-    )
+    if author_id:
+        print(author_id, category_id.id)
+        print("!!!!!!!!!!!!!!!!")
+        products = await orm_get_products_by_author_and_category(
+            session, category_id.id, int(author_id)
+        )
 
+    else:
+        products = await orm_get_products_by_category(
+            session, category=category_id.id
+        )
     paginator = Paginator(products, page=page)
     product = paginator.get_page()[0]
 
@@ -151,8 +172,54 @@ async def products(session: AsyncSession, page: int, category: str):
     kbds = get_products_btns(
         category=category,
         page=page,
+        author_id=author_id,
         pagination_btns=pagination_btns,
         # product_id=product.id,
     )
 
     return image, kbds
+
+
+############################ EVENT METHODS ##########################
+
+async def get_event_content_with_category(
+    session: AsyncSession,
+    callback_data: EventCallBack,
+):
+    if callback_data.category:
+        banner = await orm_get_banner(
+            session,
+            page=CATEGORY_MENU_NAME_DICT[callback_data.category]
+        )
+    else:
+        banner = await orm_get_banner(session, "main")
+    category = await orm_get_category_by_name(
+        session, callback_data.category
+    )
+    events = await orm_get_events_by_category_and_date(
+        session, category.id
+    )
+    if not events:
+        text = LEXICON_EVENT["пустой список"]
+    else:
+        text = LEXICON_EVENT[callback_data.category]
+    for num, event in enumerate(events, start=1):
+        text += (
+            f"\n\n<b>{num} - {event.title}. Дата проведения: "
+            f"{event.date.strftime('%d.%m.%Y')}</b>\n\n"
+        )
+    kbds = get_user_event_list_btns(
+        events, callback_data.category, callback_data.level, (1, )
+    )
+    image = InputMediaPhoto(media=banner.image, caption=text)
+
+    return image, kbds
+
+
+async def get_event_content(
+    session: AsyncSession,
+    callback_data: EventCallBack,
+):
+    if not callback_data.event_id:
+        result = await get_event_content_with_category(session, callback_data)
+        return result

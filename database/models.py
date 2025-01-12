@@ -12,10 +12,6 @@ class StatusProduct(PyEnum):
 
 class Base(DeclarativeBase):
     __abstract__ = True
-    # created_at: Mapped[datetime] = mapped_column(
-    #     index=True,
-    #     server_default=func.now()
-    # )
 
 
 class Banner(Base):
@@ -52,7 +48,7 @@ class Event(Base):
     title: Mapped[str] = mapped_column(String(150), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     image: Mapped[str] = mapped_column(String(150), nullable=True)
-    date: Mapped[datetime] = mapped_column(nullable=True)
+    date: Mapped[datetime] = mapped_column(index=True, nullable=False)
     category: Mapped[int] = mapped_column(
         ForeignKey("category.id", ondelete="SET NULL"), nullable=True
     )

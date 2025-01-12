@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import Author, Banner, Category, CeramicMaster, CeramicService, CeramicWork, Event, Product
 
 
-############### Работа с баннерами (информационными страницами)################
+############### Working with banners (information for pages)################
 async def orm_add_banner_description(session: AsyncSession, data: dict):
     query = select(Banner)
     result = await session.execute(query)
@@ -39,7 +39,7 @@ async def orm_get_info_pages(session: AsyncSession):
     return result.scalars().all()
 
 
-############################ Категории ######################################
+############################## CATEGORY ######################################
 
 async def orm_get_categories(session: AsyncSession):
     query = select(Category)
@@ -52,6 +52,7 @@ async def orm_get_category_by_name(session: AsyncSession, name: str):
     result = await session.execute(query)
     return result.scalar()
 
+
 async def orm_create_categories(session: AsyncSession, categories: list):
     query = select(Category)
     result = await session.execute(query)
@@ -61,7 +62,7 @@ async def orm_create_categories(session: AsyncSession, categories: list):
     await session.commit()
 
 
-############################ Авторы ######################################
+############################### AUTHOR #######################################
 
 async def orm_create_author(session: AsyncSession, author_info: dict):
     obj = Author(
@@ -103,8 +104,7 @@ async def orm_delete_author(session: AsyncSession, id: int):
     await session.commit()
 
 
-############################ Мероприятия ######################################
-
+############################ EVENT ######################################
 async def orm_create_event(session: AsyncSession, event_info: dict):
     date = datetime.strptime(event_info["date"], '%d.%m.%Y')
     obj = Event(
@@ -131,6 +131,18 @@ async def orm_get_events_by_category(session: AsyncSession, category: int):
     return result.scalars().all()
 
 
+async def orm_get_events_by_category_and_date(
+        session: AsyncSession, category: int
+    ):
+    query = (
+        select(Event).where(Event.category == category)
+        .filter(Event.date > datetime.now())
+        .order_by(Event.date)
+    )
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
 async def orm_get_event_by_title(session: AsyncSession, title: str): # TODO
     query = select(Event).where(Event.title == title)
     result = await session.execute(query)
@@ -153,8 +165,7 @@ async def orm_delete_event(session: AsyncSession, id: int):
     await session.commit()
 
 
-############################ Продукты ######################################
-
+############################ PRODUCT ######################################
 async def orm_create_product(session: AsyncSession, product_info: dict):
     obj = Product(
         name=product_info["name"],
@@ -172,6 +183,19 @@ async def orm_create_product(session: AsyncSession, product_info: dict):
 async def orm_get_products_by_category(session: AsyncSession, category: int):
     query = (
         select(Product).where(Product.category == category)
+        .options(joinedload(Product.author_product))
+        .options(joinedload(Product.product_category))
+    )
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
+async def orm_get_products_by_author_and_category(
+        session: AsyncSession, category: int, author: int
+    ):
+    query = (
+        select(Product).where(Product.category == category)
+        .filter(Product.author == author)
         .options(joinedload(Product.author_product))
         .options(joinedload(Product.product_category))
     )
