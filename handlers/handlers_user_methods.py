@@ -1,7 +1,7 @@
 from aiogram.types import InputMediaPhoto
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.methods import orm_get_authors_by_category, orm_get_banner, orm_get_category_by_name, orm_get_events_by_category, orm_get_events_by_category_and_date, orm_get_product_by_id, orm_get_products_by_author_and_category, orm_get_products_by_category, orm_get_products_by_type_and_category
+from database.methods import orm_get_authors_by_category, orm_get_banner, orm_get_category_by_name, orm_get_event_by_id, orm_get_events_by_category, orm_get_events_by_category_and_date, orm_get_product_by_id, orm_get_products_by_author_and_category, orm_get_products_by_category, orm_get_products_by_type_and_category
 from keyboards.inline import (
     CATEGORY_MENU_NAME_DICT,
     EventCallBack,
@@ -14,7 +14,8 @@ from keyboards.inline import (
     get_user_main_btns,
     get_user_product_list_back_btns,
     get_user_product_list_btns,
-    get_user_vr_btns
+    get_user_vr_btns,
+    user_event_id_back_btns
 )
 from lexicon.lexicon import CATEGORY_MENU_NAME_REVERSE_DICT, LEXICON_ART_GALLERY, LEXICON_EVENT, LEXICON_PRODUCT_SERVICE
 from utils.paginator import Paginator
@@ -145,8 +146,6 @@ async def products(
     """Получение списка продуктов категории домашний уход"""
     category_id = await orm_get_category_by_name(session, category)
     if author_id:
-        print(author_id, category_id.id)
-        print("!!!!!!!!!!!!!!!!")
         products = await orm_get_products_by_author_and_category(
             session, category_id.id, int(author_id)
         )
@@ -216,10 +215,32 @@ async def get_event_content_with_category(
     return image, kbds
 
 
+async def get_event_by_id(
+    session: AsyncSession,
+    callback_data: EventCallBack,
+):
+    event = await orm_get_event_by_id(session, callback_data.event_id)
+
+    text = (
+        f"<b>{event.title}</b>\n\n<b>Описание:</b>\n{event.description}"
+        f"\n\n<b>Дата проведения:</b> {event.date.strftime('%d.%m.%Y')}"
+        f"\nКатегория: {event.categorys.name}"
+        f"\nАвтор: {event.authors.name}"
+    )
+
+    image = InputMediaPhoto(media=event.image, caption=text)
+
+    kb = user_event_id_back_btns(callback_data.category, (2, ))
+
+    return image, kb
+
 async def get_event_content(
     session: AsyncSession,
     callback_data: EventCallBack,
 ):
     if not callback_data.event_id:
         result = await get_event_content_with_category(session, callback_data)
+        return result
+    else:
+        result = await get_event_by_id(session, callback_data)
         return result

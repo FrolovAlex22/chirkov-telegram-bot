@@ -122,12 +122,13 @@ async def user_event(
     session: AsyncSession,
 ):
     """Отображение событий в зависимости от категории"""
-    if not callback_data.event_id:
-        await callback.answer()
-        image, kb = await get_event_content(
-            session,
-            callback_data=callback_data,
-        )
-        await callback.message.answer_photo(
-            photo=image.media, caption=image.caption, reply_markup=kb
-        )
+    await callback.answer()
+    image, kb = await get_event_content(
+        session,
+        callback_data=callback_data,
+    )
+    await callback.message.delete()
+    print(image.caption)
+    await callback.message.answer_photo(
+        photo=image.media, caption=image.caption, reply_markup=kb
+    )

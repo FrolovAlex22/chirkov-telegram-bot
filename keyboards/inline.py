@@ -182,15 +182,6 @@ def get_user_art_galery_lvl1_btns(
                     category="Арт галерея",
                     pr_type="PRODUCT"
                 ).pack()))
-    keyboard.add(
-        InlineKeyboardButton(
-            text="Посмотреть работы наших художников",
-            callback_data=MenuCallBack(
-                menu_name="art_galery",
-                level=1
-            ).pack()
-        )
-    )
 
     keyboard.add(InlineKeyboardButton(text="В меню арт галереи",
                 callback_data=MenuCallBack(menu_name="art_galery").pack()))
@@ -295,7 +286,6 @@ def get_user_event_list_btns(
         level: int,
         sizes: tuple[int] = (2,)
     ):
-
     keyboard = InlineKeyboardBuilder()
 
     for num, e in enumerate(events, start=1):
@@ -306,16 +296,16 @@ def get_user_event_list_btns(
                     category=category,
                     level=level
                 ).pack()))
+
     if category is not None:
         back_path = CATEGORY_MENU_NAME_DICT[category]
     else:
         back_path = "main"
+
     keyboard.add(
         InlineKeyboardButton(
             text="Верунться назад",
-            callback_data=MenuCallBack(
-                menu_name=back_path
-            ).pack()
+            callback_data=MenuCallBack(menu_name=back_path).pack()
         )
     )
     keyboard.add(
@@ -324,5 +314,19 @@ def get_user_event_list_btns(
             callback_data=MenuCallBack(menu_name="main").pack()
             )
         )
+
+    return keyboard.adjust(*sizes).as_markup()
+
+
+def user_event_id_back_btns(category: str, sizes: tuple[int] = (2,)):
+
+    keyboard = InlineKeyboardBuilder()
+
+    keyboard.add(InlineKeyboardButton(text="Верунться назад",
+                callback_data=MenuCallBack(
+                    menu_name=CATEGORY_MENU_NAME_DICT[category]
+                ).pack()))
+    keyboard.add(InlineKeyboardButton(text="В главное меню",
+                callback_data=MenuCallBack(menu_name="main").pack()))
 
     return keyboard.adjust(*sizes).as_markup()
