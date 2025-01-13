@@ -1,10 +1,18 @@
+from datetime import datetime
 from aiogram.types import InputMediaPhoto
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.methods import orm_get_authors_by_category, orm_get_banner, orm_get_category_by_name, orm_get_event_by_id, orm_get_events_by_category, orm_get_events_by_category_and_date, orm_get_product_by_id, orm_get_products_by_author_and_category, orm_get_products_by_category, orm_get_products_by_type_and_category
+from database.methods import (
+    orm_get_authors_by_category, orm_get_banner, orm_get_category_by_name,
+    orm_get_event_by_id, orm_get_event_by_year,
+    orm_get_events_by_category_and_date, orm_get_product_by_id,
+    orm_get_products_by_author_and_category, orm_get_products_by_category,
+    orm_get_products_by_type_and_category
+)
 from keyboards.inline import (
     CATEGORY_MENU_NAME_DICT,
     EventCallBack,
+    choise_year_kb,
     get_products_btns,
     get_user_art_galery_btns,
     get_user_art_galery_lvl1_btns,
@@ -15,6 +23,7 @@ from keyboards.inline import (
     get_user_product_list_back_btns,
     get_user_product_list_btns,
     get_user_vr_btns,
+    user_event_by_date_btns,
     user_event_id_back_btns
 )
 from lexicon.lexicon import CATEGORY_MENU_NAME_REVERSE_DICT, LEXICON_ART_GALLERY, LEXICON_EVENT, LEXICON_PRODUCT_SERVICE
@@ -234,13 +243,65 @@ async def get_event_by_id(
 
     return image, kb
 
+
+async def get_event_by_year(
+    session: AsyncSession,
+    callback_data: EventCallBack,
+):
+    str_date = f"01.01.{callback_data.year}"
+    date = datetime.strptime(str_date, '%d.%m.%Y')
+    events = await orm_get_event_by_year(session, date)
+    text = (f"Тут вы можете означиться с событиями которые прошли в {date.year}"
+            f" году:")
+    for num, event in enumerate(events, start=1):
+        text += (
+            f"\n\n<b>{num} - {event.title}. Дата : "
+            f"{event.date.strftime('%d.%m.%Y')}</b>"
+        )
+    banner = await orm_get_banner(session, "events")
+    image = InputMediaPhoto(media=banner.image, caption=text)
+
+    kb = user_event_by_date_btns(events, (1, ))
+
+    return image, kb
+
+
+async def choise_year(
+    session: AsyncSession,
+):
+    start_year = datetime.strptime("01.01.2022", '%d.%m.%Y').year
+    year = datetime.today().year
+
+    years = [i for i in range(int(start_year), int(year) + 1)]
+    text = "Выберите год:"
+    banner = await orm_get_banner(session, "events")
+    image = InputMediaPhoto(media=banner.image, caption=text)
+
+    kb = choise_year_kb(years, (1, ))
+
+    return image, kb
+
 async def get_event_content(
     session: AsyncSession,
     callback_data: EventCallBack,
 ):
     if not callback_data.event_id:
-        result = await get_event_content_with_category(session, callback_data)
-        return result
+        if callback_data.level == 0:
+            result = await get_event_content_with_category(session, callback_data)
+            return result
+        if callback_data.level == 1:
+            result = await choise_year(session,)
+            return result
+
+        if callback_data.level == 2:
+            if callback_data.year:
+                result = await get_event_by_year(session, callback_data)
+                return result
+            else:
+                result = await get_event_content_with_category(session, callback_data)
+                return result
+
+
     else:
         result = await get_event_by_id(session, callback_data)
         return result

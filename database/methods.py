@@ -159,6 +159,20 @@ async def orm_get_event_by_id(session: AsyncSession, id: int):
     return result.unique().scalar()
 
 
+async def orm_get_event_by_year(session: AsyncSession, date: datetime):
+    start_time = datetime(date.year, 1, 1)
+    end_time = datetime(date.year, 12, 31)
+    print(start_time, end_time)
+    print("!!!!!!!!!!!!!!!!!!!!!!!")
+    query = (
+        select(Event).filter(Event.date >= start_time, Event.date <= end_time)
+        .options(joinedload(Event.authors))
+        .options(joinedload(Event.categorys))
+    )
+    result = await session.execute(query)
+    return result.unique().scalars().all()
+
+
 async def orm_delete_event(session: AsyncSession, id: int):
     query = delete(Event).where(Event.id == id)
     await session.execute(query)

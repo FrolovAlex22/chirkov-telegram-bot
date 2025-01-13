@@ -39,16 +39,21 @@ async def back_to_main_menu(
 ):
     """Сообщение в возврата в главное меню"""
     await state.clear()
-    await callback.answer()
+
     banner = await orm_get_banner(session, page="main")
     if not banner.image:
         await callback.message.answer(
            LEXICON_OTHER["need_banner"],
         )
-    await callback.message.answer_photo(
-        banner.image, caption=banner.description,
-        reply_markup=get_user_main_btns()
-    )
+    if callback.message.photo:
+        await callback.message.edit_media(
+            media=banner.image, reply_markup=get_user_main_btns()
+        )
+    else:
+        await callback.message.answer_photo(
+            banner.image, caption=banner.description,
+            reply_markup=get_user_main_btns()
+        )
 
 
 @user_router.callback_query(MenuCallBack.filter())
@@ -128,7 +133,6 @@ async def user_event(
         callback_data=callback_data,
     )
     await callback.message.delete()
-    print(image.caption)
     await callback.message.answer_photo(
         photo=image.media, caption=image.caption, reply_markup=kb
     )

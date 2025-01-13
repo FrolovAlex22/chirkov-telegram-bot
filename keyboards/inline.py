@@ -45,6 +45,7 @@ class EventCallBack(CallbackData, prefix="event"):
     category: str
     event_id: int | None = None
     level: int = 0
+    year: int | None = None
 
 
 ###################### Главное меню и основные разделы #########################
@@ -112,12 +113,32 @@ def get_user_events_btns(*, sizes: tuple[int] = (2,)):
 
     keyboard.add(InlineKeyboardButton(text="Назад",
                 callback_data=MenuCallBack(menu_name="main").pack()))
-    keyboard.add(InlineKeyboardButton(text="События 🛒",
-                callback_data=MenuCallBack(menu_name="main").pack()))
+    keyboard.add(InlineKeyboardButton(text="Выбор событий по годам",
+                callback_data=EventCallBack(
+                    category="Мероприятия",
+                    level=1
+                ).pack()))
 
-    # for c in categories:
-    #     keyboard.add(InlineKeyboardButton(text=c.name,
-    #             callback_data=MenuCallBack(level=level+1, menu_name=c.name, category=c.id).pack()))
+    return keyboard.adjust(*sizes).as_markup()
+
+
+def choise_year_kb(
+        years: list[int],
+        sizes: tuple[int] = (2,)
+    ):
+    keyboard = InlineKeyboardBuilder()
+
+    for year in years:
+        keyboard.add(InlineKeyboardButton(text=str(year),
+                callback_data=EventCallBack(
+                    category="Мероприятия",
+                    level=2,
+                    year=year
+                ).pack()))
+    keyboard.add(InlineKeyboardButton(text="Назад",
+                callback_data=MenuCallBack(menu_name="events").pack()))
+    keyboard.add(InlineKeyboardButton(text="В главное меню",
+                callback_data=MenuCallBack(menu_name="main").pack()))
 
     return keyboard.adjust(*sizes).as_markup()
 
@@ -325,6 +346,30 @@ def user_event_id_back_btns(category: str, sizes: tuple[int] = (2,)):
     keyboard.add(InlineKeyboardButton(text="Верунться назад",
                 callback_data=MenuCallBack(
                     menu_name=CATEGORY_MENU_NAME_DICT[category]
+                ).pack()))
+    keyboard.add(InlineKeyboardButton(text="В главное меню",
+                callback_data=MenuCallBack(menu_name="main").pack()))
+
+    return keyboard.adjust(*sizes).as_markup()
+
+
+def user_event_by_date_btns(
+        events: list[Event],
+        sizes: tuple[int] = (2,)
+    ):
+
+    keyboard = InlineKeyboardBuilder()
+    for n, e in enumerate(events, start=1):
+        text = f"{n}. {e.title} Дата проведения: {e.date.strftime('%d.%m.%Y')}"
+        keyboard.add(InlineKeyboardButton(text=text,
+                callback_data=EventCallBack(
+                    event_id=str(e.id),
+                    category="Мероприятия",
+                    level=1
+                ).pack()))
+    keyboard.add(InlineKeyboardButton(text="Верунться назад",
+                callback_data=MenuCallBack(
+                    menu_name=CATEGORY_MENU_NAME_DICT["Мероприятия"]
                 ).pack()))
     keyboard.add(InlineKeyboardButton(text="В главное меню",
                 callback_data=MenuCallBack(menu_name="main").pack()))
