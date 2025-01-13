@@ -7,7 +7,7 @@ from database.methods import (
     orm_get_event_by_id, orm_get_event_by_year,
     orm_get_events_by_category_and_date, orm_get_product_by_id,
     orm_get_products_by_author_and_category, orm_get_products_by_category,
-    orm_get_products_by_type_and_category
+    orm_get_products_by_type_and_category, orm_get_upcoming_events
 )
 from keyboards.inline import (
     CATEGORY_MENU_NAME_DICT,
@@ -24,7 +24,8 @@ from keyboards.inline import (
     get_user_product_list_btns,
     get_user_vr_btns,
     user_event_by_date_btns,
-    user_event_id_back_btns
+    user_event_id_back_btns,
+    user_upcoming_events_btns
 )
 from lexicon.lexicon import CATEGORY_MENU_NAME_REVERSE_DICT, LEXICON_ART_GALLERY, LEXICON_EVENT, LEXICON_PRODUCT_SERVICE
 from utils.paginator import Paginator
@@ -44,7 +45,7 @@ async def events(session, menu_name):
     banner = await orm_get_banner(session, menu_name)
     image = InputMediaPhoto(media=banner.image, caption=banner.description)
 
-    kbds = get_user_events_btns()
+    kbds = get_user_events_btns(sizes=(1, ))
 
     return image, kbds
 
@@ -251,11 +252,10 @@ async def get_event_by_year(
     str_date = f"01.01.{callback_data.year}"
     date = datetime.strptime(str_date, '%d.%m.%Y')
     events = await orm_get_event_by_year(session, date)
-    text = (f"Тут вы можете означиться с событиями которые прошли в {date.year}"
-            f" году:")
+    text = f"{LEXICON_EVENT["выбор года"]}{date.year} году:"
     for num, event in enumerate(events, start=1):
         text += (
-            f"\n\n<b>{num} - {event.title}. Дата : "
+            f"\n<b>{num} - {event.title}. Дата : "
             f"{event.date.strftime('%d.%m.%Y')}</b>"
         )
     banner = await orm_get_banner(session, "events")
@@ -281,6 +281,27 @@ async def choise_year(
 
     return image, kb
 
+
+
+
+async def get_upcoming_events(
+    session: AsyncSession,
+):
+    events = await orm_get_upcoming_events(session)
+    text = LEXICON_EVENT["предстоящие мероприятия"]
+    for num, event in enumerate(events, start=1):
+        text += (
+            f"\n<b>{num} - {event.title}. Дата : "
+            f"{event.date.strftime('%d.%m.%Y')}</b>"
+        )
+    banner = await orm_get_banner(session, "events")
+    image = InputMediaPhoto(media=banner.image, caption=text)
+
+    kb = user_upcoming_events_btns(events, (1, ))
+
+    return image, kb
+
+
 async def get_event_content(
     session: AsyncSession,
     callback_data: EventCallBack,
@@ -298,7 +319,7 @@ async def get_event_content(
                 result = await get_event_by_year(session, callback_data)
                 return result
             else:
-                result = await get_event_content_with_category(session, callback_data)
+                result = await get_upcoming_events(session)
                 return result
 
 

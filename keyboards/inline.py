@@ -110,14 +110,19 @@ def get_user_ceramic_btns(*, sizes: tuple[int] = (1, )):
 
 def get_user_events_btns(*, sizes: tuple[int] = (2,)):
     keyboard = InlineKeyboardBuilder()
-
-    keyboard.add(InlineKeyboardButton(text="Назад",
-                callback_data=MenuCallBack(menu_name="main").pack()))
+    keyboard.add(InlineKeyboardButton(text="предстоящие события в Чирковъ",
+                callback_data=EventCallBack(
+                    category="Мероприятия",
+                    level=2
+                ).pack()))
     keyboard.add(InlineKeyboardButton(text="Выбор событий по годам",
                 callback_data=EventCallBack(
                     category="Мероприятия",
                     level=1
                 ).pack()))
+
+    keyboard.add(InlineKeyboardButton(text="Назад",
+                callback_data=MenuCallBack(menu_name="main").pack()))
 
     return keyboard.adjust(*sizes).as_markup()
 
@@ -366,6 +371,30 @@ def user_event_by_date_btns(
                     event_id=str(e.id),
                     category="Мероприятия",
                     level=1
+                ).pack()))
+    keyboard.add(InlineKeyboardButton(text="Верунться назад",
+                callback_data=MenuCallBack(
+                    menu_name=CATEGORY_MENU_NAME_DICT["Мероприятия"]
+                ).pack()))
+    keyboard.add(InlineKeyboardButton(text="В главное меню",
+                callback_data=MenuCallBack(menu_name="main").pack()))
+
+    return keyboard.adjust(*sizes).as_markup()
+
+
+def user_upcoming_events_btns(
+        events: list[Event],
+        sizes: tuple[int] = (2,)
+    ):
+
+    keyboard = InlineKeyboardBuilder()
+    for n, e in enumerate(events, start=1):
+        text = f"{n}. {e.title} Дата: {e.date.strftime('%d.%m.%Y')}"
+        keyboard.add(InlineKeyboardButton(text=text,
+                callback_data=EventCallBack(
+                    event_id=str(e.id),
+                    category="Мероприятия",
+                    level=0
                 ).pack()))
     keyboard.add(InlineKeyboardButton(text="Верунться назад",
                 callback_data=MenuCallBack(

@@ -45,15 +45,11 @@ async def back_to_main_menu(
         await callback.message.answer(
            LEXICON_OTHER["need_banner"],
         )
-    if callback.message.photo:
-        await callback.message.edit_media(
-            media=banner.image, reply_markup=get_user_main_btns()
-        )
-    else:
-        await callback.message.answer_photo(
-            banner.image, caption=banner.description,
-            reply_markup=get_user_main_btns()
-        )
+    await callback.message.delete()
+    await callback.message.answer_photo(
+        banner.image, caption=banner.description,
+        reply_markup=get_user_main_btns()
+    )
 
 
 @user_router.callback_query(MenuCallBack.filter())
