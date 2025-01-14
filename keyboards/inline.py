@@ -39,6 +39,7 @@ class ProductCallBack(CallbackData, prefix="product"):
     product_id: int | None = None
     author_id: int | None = None
     page: int = 1
+    application: bool = False
 
 
 class EventCallBack(CallbackData, prefix="event"):
@@ -254,9 +255,19 @@ def get_user_product_list_btns(
     return keyboard.adjust(*sizes).as_markup()
 
 
-def get_user_product_list_back_btns(category: str, sizes: tuple[int] = (2,)):
+def get_user_product_list_back_btns(
+        category: str, product_id: int, sizes: tuple[int] = (2,)
+    ):
 
     keyboard = InlineKeyboardBuilder()
+
+    keyboard.add(InlineKeyboardButton(text="Оставить заявку",
+                callback_data=ProductCallBack(
+                    pr_type="SERVICE",
+                    category=category,
+                    product_id=product_id,
+                    application=True
+                ).pack()))
 
     keyboard.add(InlineKeyboardButton(text="Верунться назад",
                 callback_data=MenuCallBack(

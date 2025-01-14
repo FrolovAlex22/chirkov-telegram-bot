@@ -1,12 +1,13 @@
 from aiogram import F, Router
 from aiogram.filters import StateFilter, CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import Message, CallbackQuery, ContentType, ReplyKeyboardRemove, Contact
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import session_maker
 from database.methods import orm_get_banner, orm_get_events_by_category, orm_get_products_by_type_and_category
-from handlers.handlers_user_methods import art_galery_handlers, get_event_content, get_menu_content, get_product_content, get_user_service_info, products
+from handlers.handlers_user_methods import art_galery_handlers, get_event_content, get_menu_content, get_product_content, get_user_service_application_calendar, get_user_service_info, products, set_user_phone_number_application
 from keyboards.inline import EventCallBack, MenuCallBack, ProductCallBack, get_user_main_btns
 from lexicon.lexicon import CATEGORY_MENU_NAME_REVERSE_DICT, LEXICON_OTHER
 from middlewares.db import DataBaseSession
@@ -18,6 +19,14 @@ user_router.message.middleware(DataBaseSession(session_pool=session_maker))
 user_router.callback_query.middleware(
     DataBaseSession(session_pool=session_maker)
 )
+
+
+class ProductData(StatesGroup):
+    """FSM для загрузки/изменения баннеров"""
+    id = State()
+    category = State()
+    date = State()
+    phone = State()
 
 
 @user_router.message(CommandStart(), StateFilter("*"))
@@ -82,6 +91,7 @@ async def user_menu(
 async def user_product(
     callback: CallbackQuery,
     callback_data: ProductCallBack,
+    state: FSMContext,
     session: AsyncSession
 ):
     """Отображение товаров в зависимости от типа и категории"""
@@ -104,16 +114,58 @@ async def user_product(
             await callback.message.edit_caption(caption=text, reply_markup=kb)
     else:
         if callback_data.pr_type == "SERVICE":
-            await callback.answer()
-            image, kb = await get_user_service_info(
-                session, callback_data.category, int(callback_data.product_id)
-            )
+            if callback_data.application:
+                await callback.answer()
+                text, kb = await get_user_service_application_calendar()
+                await state.update_data(
+                    category=callback_data.category,
+                    product_id=callback_data.product_id
+                )
+                await state.set_state(ProductData.date)
 
-            await callback.message.edit_media(
-                media=image,
-                caption=image.caption,
-                reply_markup=kb
-            )
+                await callback.message.edit_caption(
+                    caption=text, reply_markup=kb
+                )
+            else:
+                await callback.answer()
+                image, kb = await get_user_service_info(
+                    session, callback_data.category, int(callback_data.product_id)
+                )
+
+                await callback.message.edit_media(
+                    media=image,
+                    caption=image.caption,
+                    reply_markup=kb
+                )
+
+
+@user_router.callback_query(StateFilter(ProductData.date))
+async def get_date_to_apply(
+    callback: CallbackQuery, state: FSMContext
+):
+    str_date = callback.data.split()[1]
+
+    await state.update_data(date=str_date)
+    text, kb = await set_user_phone_number_application()
+    await state.set_state(ProductData.phone)
+    await callback.message.delete()
+    await callback.message.answer(text=text, reply_markup=kb)
+
+
+@user_router.message(
+        StateFilter(ProductData.phone)
+    )
+async def get_contact(
+    message: Message, state: FSMContext
+):
+
+    contact = message.contact
+
+    await message.answer(text=f"Спасибо{contact.phone_number}", reply_markup=ReplyKeyboardRemove())
+
+    await state.clear()
+
+
 
 
 @user_router.callback_query(EventCallBack.filter())

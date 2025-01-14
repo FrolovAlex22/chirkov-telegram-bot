@@ -25,6 +25,16 @@ def get_keyboard(
             resize_keyboard=True, input_field_placeholder=placeholder)
 
 
+def get_contact_btns():
+    kb_builder = ReplyKeyboardBuilder()
+    contact_btn = KeyboardButton(
+        text='Отправить телефон',
+        request_contact=True
+    )
+    kb_builder.row(contact_btn, width=1)
+
+    return kb_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+
 ADMIN_CHOISE_CATEGORY = get_keyboard(
     "Арт галерея",
     "Мастерская керамики",

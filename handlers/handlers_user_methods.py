@@ -12,6 +12,7 @@ from database.methods import (
 from keyboards.inline import (
     CATEGORY_MENU_NAME_DICT,
     EventCallBack,
+    ProductCallBack,
     choise_year_kb,
     get_products_btns,
     get_user_art_galery_btns,
@@ -27,6 +28,8 @@ from keyboards.inline import (
     user_event_id_back_btns,
     user_upcoming_events_btns
 )
+from keyboards.my_calendar import CalendarMarkup
+from keyboards.reply import get_contact_btns, get_keyboard
 from lexicon.lexicon import CATEGORY_MENU_NAME_REVERSE_DICT, LEXICON_ART_GALLERY, LEXICON_EVENT, LEXICON_PRODUCT_SERVICE
 from utils.paginator import Paginator
 
@@ -133,9 +136,35 @@ async def get_user_service_info(
 
     image = InputMediaPhoto(media=product.image, caption=text)
 
-    kb = get_user_product_list_back_btns(category, (2, ))
+    kb = get_user_product_list_back_btns(
+        category,
+        product_id,
+        (2, )
+    )
 
     return image, kb
+
+
+async def get_user_service_application_calendar():
+
+    text = "<b>Выберите дату посещения:</b>"
+
+    current_date = datetime.now()
+    current_month = current_date.month
+    current_year = current_date.year
+
+    kb = CalendarMarkup(current_month, current_year).build.kb
+
+    return text, kb
+
+
+async def set_user_phone_number_application():
+
+    text = "Чтобы мы получили ваши контакты, пожалуйста, отправте номер телефона"
+
+    kb = get_contact_btns()
+
+    return text, kb
 
 
 def pages(paginator: Paginator):
