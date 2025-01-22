@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.engine import session_maker
 from database.methods import orm_get_banner, orm_get_events_by_category, orm_get_products_by_type_and_category
 from handlers.handlers_user_methods import art_galery_handlers, get_event_content, get_menu_content, get_product_content, get_user_service_application_calendar, get_user_service_info, products, set_user_phone_number_application
-from keyboards.inline import EventCallBack, MenuCallBack, ProductCallBack, get_user_main_btns
+from keyboards.inline import BuyCallBack, EventCallBack, MenuCallBack, ProductCallBack, get_user_main_btns
 from lexicon.lexicon import CATEGORY_MENU_NAME_REVERSE_DICT, LEXICON_OTHER
 from middlewares.db import DataBaseSession
 
@@ -183,4 +183,21 @@ async def user_event(
     await callback.message.delete()
     await callback.message.answer_photo(
         photo=image.media, caption=image.caption, reply_markup=kb
+    )
+
+
+@user_router.callback_query(BuyCallBack.filter())
+async def buy_callback(
+    callback: CallbackQuery,
+    callback_data: BuyCallBack,
+    session: AsyncSession,
+):
+    """Отображение событий в зависимости от категории"""
+    await callback.answer()
+    # image, kb = await get_event_content(
+    #     session,
+    #     callback_data=callback_data,
+    # )
+    await callback.message.edit_caption(
+        caption="image.caption", reply_markup=None
     )

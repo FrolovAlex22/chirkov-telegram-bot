@@ -211,8 +211,10 @@ async def products(
         category=category,
         page=page,
         author_id=author_id,
+        product_id=str(product.id),
+        name=product.name,
+        price=str(product.price),
         pagination_btns=pagination_btns,
-        # product_id=product.id,
     )
 
     return image, kbds

@@ -33,6 +33,12 @@ class MenuCallBack(CallbackData, prefix="menu"):
     level: int = 0
 
 
+class BuyCallBack(CallbackData, prefix="buy"):
+    product_id: str
+    title: str
+    price: str
+
+
 class ProductCallBack(CallbackData, prefix="product"):
     category: str
     pr_type: str = "PRODUCT"
@@ -284,13 +290,24 @@ def get_products_btns(
     page: int,
     category: str,
     author_id: str | None,
+    product_id: str | None,
+    price: str | None,
+    name: str | None,
     pagination_btns: dict,
     sizes: tuple[int] = (2, 1)
 ):
     keyboard = InlineKeyboardBuilder()
 
     keyboard.add(InlineKeyboardButton(
-        text="В главное меню", callback_data="main_menu")
+        text="В главное меню", callback_data=f"main_menu")
+    )
+
+    keyboard.add(InlineKeyboardButton(
+        text="Купить", callback_data=BuyCallBack(
+            product_id=product_id,
+            title=name,
+            price=price,
+        ).pack())
     )
 
     keyboard.adjust(*sizes)
