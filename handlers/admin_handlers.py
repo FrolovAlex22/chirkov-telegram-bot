@@ -1,3 +1,5 @@
+import logging
+
 from aiogram import F, Router
 from aiogram.filters import StateFilter, Command, or_f
 from aiogram.fsm.context import FSMContext
@@ -44,6 +46,9 @@ admin_router.callback_query.middleware(
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 # Переход в основные разделы администратора
 @admin_router.message(Command(commands=["admin"]))
 async def start_admin(
@@ -52,6 +57,7 @@ async def start_admin(
     session: AsyncSession
 ):
     """Вызов меню администратора"""
+    logger.info("Вызов меню администратора")
     await state.clear()
     banner = await orm_get_banner(session, page="admin")
     if not banner.image:

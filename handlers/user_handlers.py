@@ -1,3 +1,5 @@
+import logging
+
 from aiogram import F, Router
 from aiogram.filters import StateFilter, CommandStart
 from aiogram.fsm.context import FSMContext
@@ -21,6 +23,9 @@ user_router.callback_query.middleware(
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 class ProductData(StatesGroup):
     """FSM для загрузки/изменения баннеров"""
     id = State()
@@ -32,6 +37,7 @@ class ProductData(StatesGroup):
 @user_router.message(CommandStart(), StateFilter("*"))
 async def start_cmd(message: Message, session: AsyncSession, state: FSMContext):
     """Сообщение в случае команды /start"""
+    logger.info(f"Пользователь {message.from_user.id} запустил бота")
     await state.clear()
     media, reply_markup = await get_menu_content(session, menu_name="main")
 
@@ -47,6 +53,7 @@ async def back_to_main_menu(
     session: AsyncSession
 ):
     """Сообщение в возврата в главное меню"""
+    logger.info(f"Пользователь вернулся в главное меню")
     await state.clear()
 
     banner = await orm_get_banner(session, page="main")
