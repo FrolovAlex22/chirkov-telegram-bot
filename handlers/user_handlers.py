@@ -120,6 +120,7 @@ async def user_product(
             )
             await callback.message.edit_caption(caption=text, reply_markup=kb)
     else:
+        logger.info(f"Пользователь выбрал товар {callback_data.product_id}")
         if callback_data.pr_type == "SERVICE":
             if callback_data.application:
                 await callback.answer()
