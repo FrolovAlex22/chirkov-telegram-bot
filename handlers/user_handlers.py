@@ -202,10 +202,10 @@ async def buy_callback(
 ):
     """Отображение событий в зависимости от категории"""
     await callback.answer()
-    # image, kb = await get_event_content(
-    #     session,
-    #     callback_data=callback_data,
-    # )
+    image, kb = await get_event_content(
+        session,
+        callback_data=callback_data,
+    )
     await callback.message.edit_caption(
         caption="image.caption", reply_markup=None
     )
